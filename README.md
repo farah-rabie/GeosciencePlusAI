@@ -24,13 +24,15 @@ The repository follows a structured workflow:
 
 ### Data
 
-The dataset consists of well log data from seven wells in the **Volve** field dataset. For details on data extraction, log descriptions, and file formats, see the README file [here]([Data/README.md](https://github.com/farah-rabie/GeosciencePlusAI/blob/main/Data/README.md)).
+The dataset consists of well log data from seven wells in the **Volve** field dataset, with their paths visualised in 3D below. 
+![3D Visualization of Volve Field Wells](https://github.com/farah-rabie/GeosciencePlusAI/blob/main/Data/Images/3D%20Visualisation%20of%20Volve%20Field%20Wells.png)
+For details on data extraction, log descriptions, and file formats, see the README file [here]([Data/README.md](https://github.com/farah-rabie/GeosciencePlusAI/blob/main/Data/README.md)).
 
 ### Usage
 
-1. Start with the **visualisation notebook** to explore well log distributions.  
+1. Start with **visualisation** to explore well log distributions.  
 2. Use **clustering methods** to segment data based on feature similarities.  
-3. Train and evaluate **classification models** using KNN and RF.
+3. Train and evaluate **classification models**, namely KNN and RF.
 
 ### Licence
 
