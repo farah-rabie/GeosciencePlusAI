@@ -8,17 +8,17 @@ It includes applications of **Machine Learning** (ML) techniques - specifically 
 
 The repository follows a structured workflow:
 
-**Visualisation & Exploration**  
+- **Visualisation & Exploration**  
    - Examine well log data and visualise lithology distributions.  
    - Determine *training*, *validation*, and *testing* splits for well data. 
 
-**Clustering with K-means**  
+- **Clustering with K-means**  
    - Apply K-Means clustering, an *unsupervised* learning algorithm, to group data points based on similarities in well log responses.
    - Analyse resulting clusters, and investigate how well they align with known lithologies, providing insights into natural groupings within the dataset.
 
-**Classification with ML Algorithms**
+- **Classification with ML Algorithms**
    
-To classify lithology, we employ two *supervised* learning algorithms:
+   To classify lithology, we employ two *supervised* learning algorithms:
    - **K-Nearest Neighbours** (KNN): A distance-based classification method that predicts lithology labels by considering the majority class among the nearest neighbors of a data point.
    - **Random Forest** (RF): An ensemble learning method that builds multiple decision trees to improve classification performance by aggregating predictions, enhancing accuracy, and reducing overfitting.
 
