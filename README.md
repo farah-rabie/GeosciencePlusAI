@@ -6,7 +6,7 @@ It includes applications of **Machine Learning** (ML) techniques - specifically 
 
 ### Overview
 
-The repository follows a structured workflow:
+The notebooks in this repository follow a structured workflow:
 
 - **Visualisation & Exploration**  
    - Examine well log data and visualise lithology distributions.  
