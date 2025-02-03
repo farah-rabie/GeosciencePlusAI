@@ -1,0 +1,48 @@
+Well: NO 15/9-F-1 B
+Data extracted from two LAS files: wlc_petro_computed_input_1,  wlc_petro_computed_output_1 (in petrophysical interpretation folder). 
+Data recorded every 10 cm.
+Lithology assumed using provided flags (in wlc_petro_computed_output_1.las) and completion log file ( in div.reports).
+
+Well: NO 15/9-F-11 B
+Data extracted from two LAS files: wlc_petro_computed_input_1,  wlc_petro_computed_output_1 (in petrophysical interpretation folder). 
+Data recorded every 10 cm.
+Lithology assumed using provided flags (in wlc_petro_computed_output_1.las) and completion log file ( in div.reports).
+DT data is missing here.
+
+Well: NO 15/9-F-12
+Data extracted from two LAS files: wlc_petro_computed_input_1,  wlc_petro_computed_output_1 (in petrophysical interpretation folder). 
+Data recorded every 15.24 cm.
+Lithology assumed using (primarily) the completion log file (in div.reports) and the provided flags (in wlc_petro_computed_input_1.las).
+The lithology labels in this well were difficult to interpet.
+PEF data is missing here. Some DT data is missing here.
+
+Well: NO 15/9-F-4
+Data extracted from two DLIS files: wlc_petro_computed_input_1,  wlc_petro_computed_output_1 (in petrophysical interpretation folder). 
+Data recorded every 15.24 cm.
+Lithology assumed using (primarily) the completion log file (in div.reports) and the provided flags (in wlc_petro_computed_input_1.dlis).
+The lithology labels in this well were difficult to interpet.
+PEF data is missing here.
+Depth here is in tenths of an inch, and was converted to meters (by dividing depth values by 393.7)
+
+Well: NO 15/9-F-5
+Data extracted from two DLIS files: wlc_petro_computed_input_1,  wlc_petro_computed_output_1 (in petrophysical interpretation folder).
+Data recorded every 15.24 cm.
+Lithology assumed using (primarily) the completion log file (in div.reports) and the provided flags (in wlc_petro_computed_input_1.dlis).
+The lithology labels in this well were difficult to interpet.
+PEF data is missing here.
+Depth here is in tenths of an inch, and was converted to meters (by dividing depth values by 393.7)
+
+Well: NO 15/9-F-14
+Data extracted from two DLIS files: wlc_petro_computed_input_1,  wlc_petro_computed_output_1 (in petrophysical interpretation folder). 
+Data recorded every 15.24 cm.
+Lithology assumed using (primarily) the completion log file (in div.reports) and the provided flags (in wlc_petro_computed_input_1.dlis).
+The lithology labels in this well were difficult to interpet.
+Depth here is in tenths of an inch, and was converted to meters (by dividing depth values by 393.7)
+
+Well: NO 15/9-F-15 C
+Data extracted from two DLIS files: wlc_petro_computed_input_1,  wlc_petro_computed_output_1 (in petrophysical interpretation folder). 
+Data recorded every 15.24 cm.
+Lithology assumed using (primarily) the completion log file (in div.reports) and the provided flags (in wlc_petro_computed_input_1.dlis).
+The lithology labels in this well were difficult to interpet.
+PEF data is missing here.
+Depth here is in tenths of an inch, and was converted to meters (by dividing depth values by 393.7)
