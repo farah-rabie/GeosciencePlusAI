@@ -38,5 +38,5 @@ For details on data extraction, log descriptions, and file formats, see the READ
 
 This repository is licensed under the **MIT Licence**. See `LICENSE` for details.
 
-### Contact Details
+### Who Can I Contact?
 Prof. Vasily Demyanov (v.demyanov@hw.ac.uk) and Farah Rabie (fr2007@hw.ac.uk)
