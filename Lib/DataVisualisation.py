@@ -105,7 +105,7 @@ class VisualiseWellData():
             print(f"  Min: {min_val}")
             print(f"  Max: {max_val}")
 
-    def crossplot_2D(self, csv_file_path, well_name, x_col, y_col):
+    def crossplot_2D(self, csv_file_path, well_name, x_col, y_col, x_in_log=False, y_in_log=False):
         # Load the CSV file into a DataFrame
         df = pd.read_csv(csv_file_path)
         
@@ -113,7 +113,7 @@ class VisualiseWellData():
         if x_col not in df.columns or y_col not in df.columns:
             print(f"Columns '{x_col}' or '{y_col}' not found in the CSV file.")
             return
-
+    
         # Handle negative values for the selected columns (if they exist)
         for col in [x_col, y_col]:
             if (df[col] < 0).any():
@@ -123,21 +123,27 @@ class VisualiseWellData():
             
         # Drop rows with NaN values in the selected columns
         df = df.dropna(subset=[x_col, y_col])
-
+    
         # Extract the data for plotting
         x_data = df[x_col].values.reshape(-1, 1)
         y_data = df[y_col].values
-
+    
         # Linear regression
         model = LinearRegression()
         model.fit(x_data, y_data)
         y_pred = model.predict(x_data)
-
+    
         # Create the plot
         fig, ax = plt.subplots(figsize=(10, 6))
         ax.scatter(x_data, y_data, label='Data points', color='blue', alpha=0.5)
         ax.plot(x_data, y_pred, color='red', linewidth=2, label='Linear fit')
-
+    
+        # Apply log scale based on function input
+        if x_in_log:
+            ax.set_xscale("log")
+        if y_in_log:
+            ax.set_yscale("log")
+    
         # Add labels and title
         ax.set_xlabel(x_col, fontsize=10)
         ax.set_ylabel(y_col, fontsize=10)
