@@ -342,8 +342,14 @@ class KMeansClustering():
             0: {'color': '#FF6347', 'label': 'Cluster 0'},  # Tomato red
             1: {'color': '#32CD32', 'label': 'Cluster 1'},  # Lime green
             2: {'color': '#1E90FF', 'label': 'Cluster 2'},  # Dodger blue
-            3: {'color': 'pink', 'label': 'Cluster 3'}   # Pink
-        }
+            3: {'color': '#FFC0CB', 'label': 'Cluster 3'},  # Pink
+            4: {'color': '#FFD700', 'label': 'Cluster 4'},  # Gold
+            5: {'color': '#8A2BE2', 'label': 'Cluster 5'},  # Blue violet
+            6: {'color': '#00CED1', 'label': 'Cluster 6'},  # Dark turquoise
+            7: {'color': '#DC143C', 'label': 'Cluster 7'},  # Crimson
+            8: {'color': '#7FFF00', 'label': 'Cluster 8'},  # Chartreuse
+            9: {'color': '#FF4500', 'label': 'Cluster 9'}   # Orange red
+}
     
         # Create subplots: Lithology (left) and Clusters (right)
         fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(12, 8), sharey=True)
