@@ -383,12 +383,13 @@ class KMeansClustering():
             if cluster in cluster_labels:
                 color = cluster_labels[cluster]['color']
                 ax2.fill_betweenx([depth_for_lithology[j], depth_for_lithology[j + 1]], 0, 1, 
-                                  facecolor=color, alpha=0.6)
+                          facecolor=color, alpha=0.6)
                 
-        handles = []
-        for cluster, attrs in cluster_labels.items():
-            patch = mpatches.Patch(facecolor=attrs['color'], edgecolor='k', label=f'cluster {cluster}')
-            handles.append(patch)
+        unique_clusters_in_data = sorted(set(cluster_column) & set(cluster_labels.keys()))  
+    
+        handles = [mpatches.Patch(facecolor=cluster_labels[c]['color'], edgecolor='k', label=f'Cluster {c}')
+           for c in unique_clusters_in_data]
+            
         ax2.legend(handles=handles, loc='best')
 
         ax2.set_xlabel('Clusters', fontsize=12)
