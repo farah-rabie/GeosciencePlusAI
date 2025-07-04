@@ -501,6 +501,78 @@ class RFClassification():
         print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred))
     
         return accuracy, y_pred
+
+class SVMClassification():
+    
+    def __init__(self):
+        pass
+
+    def tune_svm(self, df_train, df_val, feature_columns, target_column, kernel='rbf', cv=5):
+        """
+        Tune and train an SVM classifier using GridSearchCV.
+        
+        Parameters:
+        - df_train: DataFrame containing training data
+        - df_val: DataFrame containing validation data
+        - feature_columns: List of feature column names
+        - target_column: Name of the target column
+        - kernel: Kernel type for SVM ('linear', 'rbf', 'poly')
+        - cv: Number of cross-validation folds
+        
+        Returns:
+        - best_svm: Trained SVM model with best parameters
+        - best_params: Best hyperparameters found
+        - accuracy: Accuracy on the validation set
+        - y_pred: Predicted values on validation set
+        """
+        X_train = df_train[feature_columns]
+        y_train = df_train[target_column]
+        X_val = df_val[feature_columns]
+        y_val = df_val[target_column]
+
+        # Parameter grid for tuning
+        param_grid = {
+            'C': [0.1, 1, 10, 100],
+            'gamma': ['scale', 0.1, 0.01, 0.001],
+            'kernel': [kernel]
+        }
+
+        svm = SVC()
+
+        grid_search = GridSearchCV(svm, param_grid, cv=cv, verbose=1, n_jobs=-1)
+        grid_search.fit(X_train, y_train)
+
+        best_svm = grid_search.best_estimator_
+        best_params = grid_search.best_params_
+
+        y_pred = best_svm.predict(X_val)
+        accuracy = accuracy_score(y_val, y_pred)
+
+        print(f"Validation Accuracy: {accuracy:.4f}")
+        print("\nBest Parameters:", best_params)
+        print("\nClassification Report:\n", classification_report(y_val, y_pred, zero_division=0))
+        print("\nConfusion Matrix:\n", confusion_matrix(y_val, y_pred))
+
+        return best_svm, best_params, accuracy, y_pred
+
+    def test_svm(self, trained_model, df_test, feature_columns, target_column):
+        """
+        Test a trained SVM model on test data.
+        
+        Returns:
+        - accuracy: Accuracy score
+        - y_pred: Predicted labels
+        """
+        X_test = df_test[feature_columns]
+        y_test = df_test[target_column]
+
+        y_pred = trained_model.predict(X_test)
+        accuracy = accuracy_score(y_test, y_pred)
+
+        print(f"Test Accuracy: {accuracy:.4f}")
+        print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred))
+
+        return accuracy, y_pred
         
 
     
