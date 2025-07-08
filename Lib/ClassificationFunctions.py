@@ -14,6 +14,9 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.metrics import classification_report
 
+from sklearn.svm import SVC
+from sklearn.model_selection import GridSearchCV
+
 class DataProcessing():
 
     def __init__(self):
