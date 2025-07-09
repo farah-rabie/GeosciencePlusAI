@@ -19,62 +19,62 @@ class VisualiseWellData():
             'Claystone': {'color': '#228B22', 'hatch': '--'}  
         }
 
-def visualise_lithology_distribution(self, csv_file_path, well_name, display='count'):
-    # Load the CSV file into a DataFrame
-    df = pd.read_csv(csv_file_path)
+    def visualise_lithology_distribution(self, csv_file_path, well_name, display='count'):
+        # Load the CSV file into a DataFrame
+        df = pd.read_csv(csv_file_path)
 
-    # Check if 'LITHOLOGY' column exists
-    if 'LITHOLOGY' not in df.columns:
-        print("Column 'LITHOLOGY' not found in the CSV file.")
-        return
+        # Check if 'LITHOLOGY' column exists
+        if 'LITHOLOGY' not in df.columns:
+            print("Column 'LITHOLOGY' not found in the CSV file.")
+            return
 
-    # Get lithology distribution
-    lithology_counts = df['LITHOLOGY'].value_counts()
-    total = lithology_counts.sum()
+        # Get lithology distribution
+        lithology_counts = df['LITHOLOGY'].value_counts()
+        total = lithology_counts.sum()
 
-    # Dictionary of lithology properties (color, hatch symbol)
-    lithology_dict = self.lithology_labels
+        # Dictionary of lithology properties (color, hatch symbol)
+        lithology_dict = self.lithology_labels
 
-    # Plot the distribution
-    fig, ax = plt.subplots(figsize=(10, 6))
-    bars = []
+        # Plot the distribution
+        fig, ax = plt.subplots(figsize=(10, 6))
+        bars = []
 
-    for lithology, count in lithology_counts.items():
-        color = lithology_dict.get(lithology, {}).get('color', '#D2B48C')  # Default color
-        hatch = lithology_dict.get(lithology, {}).get('hatch', '')  # Default hatch
+        for lithology, count in lithology_counts.items():
+            color = lithology_dict.get(lithology, {}).get('color', '#D2B48C')  # Default color
+            hatch = lithology_dict.get(lithology, {}).get('hatch', '')  # Default hatch
 
-        bar = ax.bar(lithology, count, color=color, hatch=hatch)
-        bars.append((bar, count))
+            bar = ax.bar(lithology, count, color=color, hatch=hatch)
+            bars.append((bar, count))
 
-    # Add annotations
-    for bar, count in bars:
-        for rect in bar:
-            percent = (count / total) * 100
-            label = ''
-            if display == 'count':
-                label = str(int(count))
-            elif display == 'percentage':
-                label = f"{percent:.1f}%"
-            elif display == 'both':
-                label = f"{int(count)}\n({percent:.1f}%)"
+        # Add annotations
+        for bar, count in bars:
+            for rect in bar:
+                percent = (count / total) * 100
+                label = ''
+                if display == 'count':
+                    label = str(int(count))
+                elif display == 'percentage':
+                    label = f"{percent:.1f}%"
+                elif display == 'both':
+                    label = f"{int(count)}\n({percent:.1f}%)"
 
-            ax.text(rect.get_x() + rect.get_width() / 2, rect.get_height(), label,
-                    ha='center', va='bottom', fontsize=10)
+                ax.text(rect.get_x() + rect.get_width() / 2, rect.get_height(), label,
+                        ha='center', va='bottom', fontsize=10)
 
-    # Custom legend
-    legend_handles = [
-        Patch(facecolor=lithology_dict[lithology]["color"], hatch=lithology_dict[lithology]["hatch"], label=lithology)
-        for lithology in lithology_dict
-    ]
-    ax.legend(handles=legend_handles, title='Lithology', bbox_to_anchor=(1.05, 1), loc='upper left')
+        # Custom legend
+        legend_handles = [
+            Patch(facecolor=lithology_dict[lithology]["color"], hatch=lithology_dict[lithology]["hatch"], label=lithology)
+            for lithology in lithology_dict
+        ]
+        ax.legend(handles=legend_handles, title='Lithology', bbox_to_anchor=(1.05, 1), loc='upper left')
 
-    # Labels and formatting
-    ax.set_ylabel('Count', fontsize=10)
-    ax.set_xlabel('Lithology', fontsize=10)
-    ax.set_title(f'Lithology Distribution for Well {well_name}', fontsize=12)
-    plt.xticks(rotation=45, ha='right')
-    plt.tight_layout()
-    plt.show()
+        # Labels and formatting
+        ax.set_ylabel('Count', fontsize=10)
+        ax.set_xlabel('Lithology', fontsize=10)
+        ax.set_title(f'Lithology Distribution for Well {well_name}', fontsize=12)
+        plt.xticks(rotation=45, ha='right')
+        plt.tight_layout()
+        plt.show()
         
     def show_available_logs(self, csv_file_path):
         
