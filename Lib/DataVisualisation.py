@@ -78,33 +78,36 @@ class VisualiseWellData():
         plt.show()
         
     def show_available_logs(self, csv_file_path):
-        
         # Load the CSV file into a DataFrame
         df = pd.read_csv(csv_file_path)
-        
+
         # Check if the file has any data
         if df.empty:
             print("The CSV file is empty.")
             return
-        
+
         # Show the column names (which represent the available logs)
         print("Available logs in the data file:")
-        
+
         # Iterate through each column and print statistics
         for column in df.columns:
-
             if column == 'LITHOLOGY':  # Skip the 'LITHOLOGY' column
                 continue
-                
-            print(f"\nStatistics for '{column}':")
+
             column_data = df[column]
-            
+
+            if column_data.dropna().empty:
+                print(f"\n ⚠️ Warning: Column '{column}' is completely empty or contains only NaNs.")
+                continue
+
+            print(f"\nStatistics for '{column}':")
+
             # Calculate statistics
-            count = column_data.count()  # Number of non-NA/null entries
-            mean = column_data.mean()  # Mean of the column
-            std_dev = column_data.std()  # Standard deviation
-            min_val = column_data.min()  # Minimum value
-            max_val = column_data.max()  # Maximum value
+            count = column_data.count()
+            mean = column_data.mean()
+            std_dev = column_data.std()
+            min_val = column_data.min()
+            max_val = column_data.max()
 
             # Print the statistics
             print(f"  Count: {count}")
