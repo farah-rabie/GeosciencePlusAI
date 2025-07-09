@@ -183,7 +183,6 @@ class VisualiseWellData():
         #)
 
     def plot_well_logs_and_lithology(self, csv_file_path, well_name):
-        
         # Load the well data CSV
         well_data = pd.read_csv(csv_file_path)
 
@@ -199,98 +198,95 @@ class VisualiseWellData():
         RHOB = well_data['RHOB'].values
         RT = well_data['RT'].values
 
-        # Assuming lithology data is also available in the CSV file
-        # Ensure lithology is in 'Lithology' column, else this will need to be adjusted
+        # Lithology data
         lithology_data = well_data[['DEPTH', 'LITHOLOGY']]  
         depth_for_lithology = lithology_data['DEPTH'].values
         lithology = lithology_data['LITHOLOGY'].values
 
-        # Check for negative values in well logs and depth, and replace with 0
-        for column_name, column_data in zip(['DEPTH', 'BVW', 'KLOGH', 'VSH', 'DT', 'GR', 'NPHI', 'PEF', 'RHOB', 'RT'], 
-                                            [DEPTH, BVW, KLOGH, VSH, DT, GR, NPHI, PEF, RHOB, RT]):
+        # Replace negative values with zero
+        for column_name, column_data in zip(
+            ['DEPTH', 'BVW', 'KLOGH', 'VSH', 'DT', 'GR', 'NPHI', 'PEF', 'RHOB', 'RT'],
+            [DEPTH, BVW, KLOGH, VSH, DT, GR, NPHI, PEF, RHOB, RT]
+        ):
             negative_indices = column_data < 0
             if any(negative_indices):
-                negative_count = sum(negative_indices)
-                print(f"Warning: {negative_count} negative values found in {column_name} data. These have been replaced with zero.")
+                print(f"Warning: {sum(negative_indices)} negative values found in {column_name}. Replacing with 0.")
                 column_data[negative_indices] = 0
 
-        fig, axes = plt.subplots(2, 5, figsize=(15, 30))  # 2 rows, 5 columns
-        curve_names = ['BVW', 'KLOGH', 'VSH', 'DT', 'GR', 'NPHI', 'PEF', 'RHOB', 'RT', 'LITHOLOGY']
-        ax1, ax2, ax3, ax4, ax5, ax6, ax7, ax8, ax9, ax10 = axes.flatten()  # Flatten to make it easier to reference
-        
-        # Plot BVW (Bulk Volume Water)
+        # Create subplots
+        fig, axes = plt.subplots(2, 5, figsize=(15, 30))
+        ax1, ax2, ax3, ax4, ax5, ax6, ax7, ax8, ax9, ax10 = axes.flatten()
+
+        # Plot each log
         ax1.plot(BVW, DEPTH, color="darkred", lw=2.5)
-        ax1.set_ylabel('Depth (m)', labelpad=10, fontsize=12)
         ax1.set_xlabel('BVW (Bulk Volume Water)', labelpad=10, fontsize=12)
-        
-        # Plot KLOGH (Horizontal Permeability)
+        ax1.set_ylabel('Depth (m)', labelpad=10, fontsize=12)
+
         ax2.plot(KLOGH, DEPTH, color="royalblue", lw=2.5)
         ax2.set_xlabel('KLOGH (Permeability)', labelpad=10, fontsize=12)
-        
-        # Plot VSH (Shale Volume)
+
         ax3.plot(VSH, DEPTH, color="forestgreen", lw=2.5)
         ax3.set_xlabel('VSH (Shale Volume)', labelpad=10, fontsize=12)
-        
-        # Plot DT (Travel Time)
+
         ax4.plot(DT, DEPTH, color="orange", lw=2.5)
         ax4.set_xlabel('DT (Travel Time)', labelpad=10, fontsize=12)
         ax4.set_xscale('log')
-        
-        # Plot GR (Gamma Ray)
+
         ax5.plot(GR, DEPTH, color="mediumpurple", lw=2.5)
         ax5.set_xlabel('GR (Gamma Ray)', labelpad=10, fontsize=12)
-        
-        # Plot NPHI (Neutron Porosity)
+
         ax6.plot(NPHI, DEPTH, color="teal", lw=2.5)
-        ax1.set_ylabel('Depth (m)', labelpad=10, fontsize=12)
         ax6.set_xlabel('NPHI (Neutron Porosity)', labelpad=10, fontsize=12)
-        
-        # Plot PEF (Photoelectric Factor)
+
         ax7.plot(PEF, DEPTH, color="crimson", lw=2.5)
         ax7.set_xlabel('PEF (Photoelectric Factor)', labelpad=10, fontsize=12)
-        
-        # Plot RHOB (Bulk Density)
+
         ax8.plot(RHOB, DEPTH, color="slategray", lw=2.5)
         ax8.set_xlabel('RHOB (Bulk Density)', labelpad=10, fontsize=12)
-        
-        # Plot RT (Resistivity)
+
         ax9.plot(RT, DEPTH, color="black", lw=2.5)
         ax9.set_xlabel('RT (Resistivity)', labelpad=10, fontsize=12)
         ax9.set_xscale('log')
-        
-        # Plot Lithology
-        for j in range(len(depth_for_lithology) - 1):
-            lith = lithology[j]
-            hatch = self.lithology_labels[lith]['hatch']
-            color = self.lithology_labels[lith]['color']
-            ax10.fill_betweenx([depth_for_lithology[j], depth_for_lithology[j + 1]], 0, 1, facecolor=color, hatch=hatch)
-        
-        # Adding lithology legend
-        handles = []
-        for lith, attrs in self.lithology_labels.items():
-            patch = mpatches.Patch(facecolor=attrs['color'], hatch=attrs['hatch'], edgecolor='k', label=f'{lith}')
-            handles.append(patch)
+
+        # --- Optimized lithology plotting ---
+        intervals = []
+        for key, group in groupby(enumerate(lithology), key=lambda x: x[1]):
+            group = list(group)
+            start_idx = group[0][0]
+            end_idx = group[-1][0] + 1  # inclusive
+            lith = key
+            if end_idx >= len(depth_for_lithology):  # avoid out-of-range
+                end_idx = len(depth_for_lithology) - 1
+            top = depth_for_lithology[start_idx]
+            base = depth_for_lithology[end_idx]
+            intervals.append((top, base, lith))
+
+        for top, base, lith in intervals:
+            hatch = self.lithology_labels.get(lith, {}).get('hatch', '')
+            color = self.lithology_labels.get(lith, {}).get('color', '#D2B48C')
+            ax10.fill_betweenx([top, base], 0, 1, facecolor=color, hatch=hatch, edgecolor='k')
+
+        # Lithology legend
+        handles = [
+            mpatches.Patch(facecolor=attrs['color'], hatch=attrs['hatch'], edgecolor='k', label=lith)
+            for lith, attrs in self.lithology_labels.items()
+        ]
         ax10.legend(handles=handles, loc='upper center', bbox_to_anchor=(0.5, 1.15), ncol=len(handles), fancybox=True, fontsize=12)
         ax10.set_xlabel('Lithology', labelpad=20, fontsize=12)
-        ax10.set_xticks([])  # Hide x-axis for lithology plot
-        
-        # Set common properties for all axes
+        ax10.set_xticks([])
+
+        # Set common depth scale and orientation
         for ax in [ax1, ax2, ax3, ax4, ax5, ax6, ax7, ax8, ax9, ax10]:
-            ax.set_ylim(max(depth_for_lithology), min(depth_for_lithology))  # Invert depth axis
+            ax.set_ylim(max(depth_for_lithology), min(depth_for_lithology))  # Invert
             ax.xaxis.set_ticks_position("top")
             ax.xaxis.set_label_position("top")
-        
-        # Hide y-axis tick labels for logs
-        for ax in [ax2, ax3, ax4, ax5, ax7, ax8, ax9, ax10]:
-            plt.setp(ax.get_yticklabels(), visible=False)
-        
-        # Reduce space between subplots
+
+            # Hide y-axis tick labels for all but the first column
+            for ax in [ax2, ax3, ax4, ax5, ax7, ax8, ax9, ax10]:
+                ax.tick_params(labelleft=False)
+
         fig.subplots_adjust(wspace=0.5)
-        
-        # Set plot title
         fig.suptitle(f"Well Logs and Lithology for {well_name}", fontsize=16, y=0.92)
-        
-        # Display the plot
         plt.show()
 
 # References
