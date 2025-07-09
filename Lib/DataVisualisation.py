@@ -36,7 +36,7 @@ class VisualiseWellData():
         lithology_dict = self.lithology_labels
 
         # Plot the distribution
-        fig, ax = plt.subplots(figsize=(10, 6))
+        fig, ax = plt.subplots(figsize=(10, 8))
         bars = []
 
         for lithology, count in lithology_counts.items():
