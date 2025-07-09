@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
 import matplotlib.patches as mpatches
 import matplotlib.ticker as ticker
+from itertools import groupby
 from sklearn.linear_model import LinearRegression
 
 class VisualiseWellData():
