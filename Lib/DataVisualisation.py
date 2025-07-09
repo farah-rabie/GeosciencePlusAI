@@ -105,56 +105,75 @@ class VisualiseWellData():
             print(f"  Min: {min_val}")
             print(f"  Max: {max_val}")
 
-    def crossplot_2D(self, csv_file_path, well_name, x_col, y_col, x_in_log=False, y_in_log=False):
+    def crossplot_2D(self, csv_file_path, well_name, x_col, y_col, x_in_log=False, y_in_log=False, color_col=None):
         # Load the CSV file into a DataFrame
         df = pd.read_csv(csv_file_path)
-        
+
         # Check if the selected columns exist
-        if x_col not in df.columns or y_col not in df.columns:
-            print(f"Columns '{x_col}' or '{y_col}' not found in the CSV file.")
-            return
-    
-        # Handle negative values for the selected columns (if they exist)
+        for col in [x_col, y_col, color_col] if color_col else [x_col, y_col]:
+            if col not in df.columns:
+                print(f"Column '{col}' not found in the CSV file.")
+                return
+
+        # Handle negative values for the selected columns
         for col in [x_col, y_col]:
             if (df[col] < 0).any():
                 negative_count = (df[col] < 0).sum()
-                df[col] = df[col].clip(lower=0)  # Clip negative values to 0
+                df[col] = df[col].clip(lower=0)
                 print(f"{negative_count} negative values in '{col}' have been clipped to 0.")
-            
-        # Drop rows with NaN values in the selected columns
-        df = df.dropna(subset=[x_col, y_col])
-    
-        # Extract the data for plotting
+
+        # Drop rows with NaN in required columns
+        drop_cols = [x_col, y_col] + ([color_col] if color_col else [])
+        df = df.dropna(subset=drop_cols)
+
+        # Extract data for regression
         x_data = df[x_col].values.reshape(-1, 1)
         y_data = df[y_col].values
-    
-        # Linear regression
+
+        # Fit linear regression model
         model = LinearRegression()
         model.fit(x_data, y_data)
         y_pred = model.predict(x_data)
-    
-        # Create the plot
+
+        # Create plot
         fig, ax = plt.subplots(figsize=(10, 6))
-        ax.scatter(x_data, y_data, label='Data points', color='blue', alpha=0.5)
+
+        # Plot scatter with lithology-based coloring
+        if color_col:
+            unique_liths = df[color_col].unique()
+            for lith in unique_liths:
+                mask = df[color_col] == lith
+                ax.scatter(df.loc[mask, x_col], df.loc[mask, y_col], 
+                           label=str(lith), alpha=0.6)
+        else:
+            ax.scatter(x_data, y_data, label='Data points', color='blue', alpha=0.5)
+
+        # Plot regression line
         ax.plot(x_data, y_pred, color='red', linewidth=2, label='Linear fit')
-    
-        # Apply log scale based on function input
+
+        # Set log scales if needed
         if x_in_log:
             ax.set_xscale("log")
         if y_in_log:
             ax.set_yscale("log")
-    
+
         # Add labels and title
         ax.set_xlabel(x_col, fontsize=10)
         ax.set_ylabel(y_col, fontsize=10)
         ax.set_title(f'{x_col} vs {y_col} for Well {well_name}', fontsize=12)
-        ax.legend()
+        ax.legend(title=color_col if color_col else "Legend")
 
-        plt.tight_layout()  # Adjust layout for better fit
+        plt.tight_layout()
         plt.show()
 
         # Example usage:
-        # visualiser.crossplot_2D(r".\Well Data\15_9-F-14.csv", "15_9-F-14", "NPHI", "RHOB")
+        # visualiser.crossplot_2D(csv_file_path='.\Well Data\15_9-F-4.csv',
+        # well_name='well_name',
+        # x_col='NPHI',
+        # y_col='RHOB',
+        # x_in_log=False,
+        # color_col='LITHOLOGY'
+        #)
 
     def plot_well_logs_and_lithology(self, csv_file_path, well_name):
         
