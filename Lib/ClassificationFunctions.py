@@ -66,7 +66,7 @@ class DataProcessing():
         lithology_dict = self.lithology_labels
 
         # Create the plot
-        fig, ax = plt.subplots(figsize=(10, 6))
+        fig, ax = plt.subplots(figsize=(10, 8))
 
         for lithology, count in combined_lithology_counts.items():
             color = lithology_dict.get(lithology, {}).get('color', '#D2B48C')  # Default tan color
