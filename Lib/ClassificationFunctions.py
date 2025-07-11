@@ -353,6 +353,16 @@ class KNNClassification():
     
         depth = test_df['DEPTH'].values
         true_lithology = test_df['LITHOLOGY'].values
+
+        # Define lithology labels with colors and hatch patterns
+        lithology_labels = {
+            'sandstone': {'color': '#ffff00', 'hatch': '..'},
+            'marl': {'color': '#80ffff', 'hatch': ''}, 
+            'limestone': {'color': '#4682B4', 'hatch': '++'},
+            'coal': {'color': 'black', 'hatch': ''},
+            'silt': {'color': '#7cfc00', 'hatch': '||'},
+            'claystone': {'color': '#228B22', 'hatch': '--'}  
+        }
     
         # Helper to group lithology intervals
         def group_intervals(depths, liths):
@@ -397,8 +407,8 @@ class KNNClassification():
             ax.set_xlabel(log_name, fontsize=11)
             ax.set_title(f'{log_name} Log', fontsize=12)
             ax.invert_yaxis()
-            ax.xaxis.set_ticks_position("top")
-            ax.xaxis.set_label_position("top")
+            ax.xaxis.set_ticks_position("bottom")
+            ax.xaxis.set_label_position("bottom")
             if i != 0:
                 ax.tick_params(labelleft=False)
             ax.tick_params(labelbottom=False)  # Remove bottom x-labels
