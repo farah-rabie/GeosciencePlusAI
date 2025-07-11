@@ -62,7 +62,7 @@ class DataProcessing():
         total = sum(combined_lithology_counts.values())
 
         # Dictionary of lithology properties (color, hatch symbol)
-        lithology_dict = self.lithology_labels
+        lithology_dict = lithology_labels
 
         # Create the plot
         fig, ax = plt.subplots(figsize=(10, 8))
@@ -453,7 +453,7 @@ class KNNClassification():
                 edgecolor='k',
                 label=lith
             )
-            for lith, props in self.lithology_labels.items()
+            for lith, props in lithology_labels.items()
         ]
         ax_true.legend(handles=handles, loc='upper center', bbox_to_anchor=(0.5, 1.15),
                        ncol=len(handles), fontsize=10, fancybox=True)
