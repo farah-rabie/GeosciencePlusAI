@@ -342,19 +342,15 @@ class KNNClassification():
         print("Accuracy of KNN when tested is", accuracy)
         return accuracy, y_pred
 
-    def plot_lithology_comparison(self, test_df, predicted_lithology):
-        
+    def plot_lithology_comparison(self, test_df, predicted_lithology, use_hatch=True):
         """
         Visualises true and predicted lithology profiles for a given depth using test data.
-        
+    
         Parameters:
             test_df (pd.DataFrame): The test DataFrame with 'DEPTH' and 'LITHOLOGY' columns.
             predicted_lithology (np.array): Predicted lithology labels from the model.
+            use_hatch (bool): Whether to use hatch patterns (can be disabled for speed).
         """
-        
-        # Extract depth and true lithology from the test DataFrame
-        depth_for_lithology = test_df['DEPTH'].values
-        true_lithology = test_df['LITHOLOGY'].values
     
         # Define lithology labels with colors and hatch patterns
         lithology_labels = {
@@ -365,40 +361,61 @@ class KNNClassification():
             'silt': {'color': '#7cfc00', 'hatch': '||'},
             'claystone': {'color': '#228B22', 'hatch': '--'}  
         }
-        
-        # Create subplots: True Lithology (left) and Predicted Lithology (right)
+    
+        # Extract depth and true lithology
+        depth_for_lithology = test_df['DEPTH'].values
+        true_lithology = test_df['LITHOLOGY'].values
+    
+        # Group consecutive intervals with the same lithology
+        def group_intervals(depths, liths):
+            grouped = []
+            current_lith = liths[0]
+            start_depth = depths[0]
+            for i in range(1, len(depths)):
+                if liths[i] != current_lith:
+                    grouped.append((start_depth, depths[i-1], current_lith))
+                    current_lith = liths[i]
+                    start_depth = depths[i]
+            grouped.append((start_depth, depths[-1], current_lith))
+            return grouped
+    
+        true_blocks = group_intervals(depth_for_lithology, true_lithology)
+        pred_blocks = group_intervals(depth_for_lithology, predicted_lithology)
+    
+        # Create subplots
         fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(12, 8), sharey=True)
     
         # --- PLOT 1: True Lithology ---
         ax1 = axes[0]
-        for j in range(len(depth_for_lithology) - 1):
-            lith = true_lithology[j].lower()  # Convert to lowercase for matching
+        for start, end, lith in true_blocks:
+            lith = lith.lower()
             if lith in lithology_labels:
-                hatch = lithology_labels[lith]['hatch']
                 color = lithology_labels[lith]['color']
-                ax1.fill_betweenx([depth_for_lithology[j], depth_for_lithology[j + 1]], 0, 1, 
-                                  facecolor=color, hatch=hatch, alpha=0.6)
+                hatch = lithology_labels[lith]['hatch'] if use_hatch else ''
+                ax1.fill_betweenx([start, end], 0, 1, facecolor=color, hatch=hatch, alpha=0.6)
     
         ax1.set_xlabel('True Lithology', fontsize=12)
         ax1.set_ylabel('Depth (m)', fontsize=12)
         ax1.set_title('True Lithology Profile', fontsize=14)
-        ax1.invert_yaxis()  # Depth increases downward
+        ax1.invert_yaxis()
     
-        handles = []
-        for lith, attrs in lithology_labels.items():
-            patch = mpatches.Patch(facecolor=attrs['color'], hatch=attrs['hatch'], edgecolor='k', label=f'{lith}')
-            handles.append(patch)
+        # Add legend
+        handles = [
+            mpatches.Patch(facecolor=attrs['color'],
+                           hatch=attrs['hatch'] if use_hatch else '',
+                           edgecolor='k', label=lith)
+            for lith, attrs in lithology_labels.items()
+        ]
         ax1.legend(handles=handles, loc='best')
     
         # --- PLOT 2: Predicted Lithology ---
         ax2 = axes[1]
-        for j in range(len(depth_for_lithology) - 1):
-            lith = predicted_lithology[j].lower()  # Convert to lowercase for matching
+        for start, end, lith in pred_blocks:
+            lith = lith.lower()
             if lith in lithology_labels:
-                hatch = lithology_labels[lith]['hatch']
                 color = lithology_labels[lith]['color']
-                ax2.fill_betweenx([depth_for_lithology[j], depth_for_lithology[j + 1]], 0, 1, 
-                                  facecolor=color, hatch=hatch, alpha=0.6)
+                hatch = lithology_labels[lith]['hatch'] if use_hatch else ''
+                ax2.fill_betweenx([start, end], 0, 1, facecolor=color, hatch=hatch, alpha=0.6)
     
         ax2.set_xlabel('Predicted Lithology', fontsize=12)
         ax2.set_title('Predicted Lithology Profile', fontsize=14)
