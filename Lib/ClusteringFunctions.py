@@ -471,7 +471,7 @@ class KMeansClustering():
             cluster = cluster_column[j]
             if cluster in cluster_labels:
                 color = cluster_labels[cluster]['color']
-                ax_cluster.fill_betweenx([depth[j], depth[j + 1]], 0, 1, facecolor=color, alpha=0.6, edgecolor='k')
+                ax_cluster.fill_betweenx([depth[j], depth[j + 1]], 0, 1, facecolor=color, alpha=0.6, edgecolor='none')
         ax_cluster.set_xlim(0, 1)
         ax_cluster.set_xlabel('Cluster', fontsize=10)
         ax_cluster.set_title('Cluster Profile', fontsize=12)
