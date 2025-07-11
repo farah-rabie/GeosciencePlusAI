@@ -392,20 +392,23 @@ class KMeansClustering():
         return test_clustered
     
     def visualise_lithology_clusters(self, clustered_data, log_columns=None):
-        
         """
-        Visualises lithology and cluster predictions separately on depth profiles.
+        Visualises lithology and cluster predictions along with log curves on depth profiles.
         
         Parameters:
-            clustered_data (pd.DataFrame): DataFrame with 'DEPTH', 'LITHOLOGY', and 'Cluster' columns.
+            clustered_data (pd.DataFrame): Must contain 'DEPTH', 'LITHOLOGY', and 'Cluster'.
+            log_columns (list): Optional list of log column names to plot.
         """
     
-        # Sort data by depth
+        # Sort and extract data
         clustered_data = clustered_data.sort_values(by='DEPTH')
+        clustered_data['LITHOLOGY'] = clustered_data['LITHOLOGY'].str.lower()  # Normalize labels
+    
         depth = clustered_data['DEPTH'].values
         lithology = clustered_data['LITHOLOGY'].values
         cluster_column = clustered_data['Cluster'].values
     
+        # Lithology color/hatch map
         lithology_labels = {
             'sandstone': {'color': '#ffff00', 'hatch': '..'},
             'marl': {'color': '#80ffff', 'hatch': ''}, 
@@ -415,30 +418,24 @@ class KMeansClustering():
             'claystone': {'color': '#228B22', 'hatch': '--'}  
         }
     
+        # Cluster color map
         cluster_labels = {
-            0: {'color': '#FF6347', 'label': 'Cluster 0'},  # Tomato red
-            1: {'color': '#32CD32', 'label': 'Cluster 1'},  # Lime green
-            2: {'color': '#1E90FF', 'label': 'Cluster 2'},  # Dodger blue
-            3: {'color': '#FFC0CB', 'label': 'Cluster 3'},  # Pink
-            4: {'color': '#FFD700', 'label': 'Cluster 4'},  # Gold
-            5: {'color': '#8A2BE2', 'label': 'Cluster 5'},  # Blue violet
-            6: {'color': '#00CED1', 'label': 'Cluster 6'},  # Dark turquoise
-            7: {'color': '#DC143C', 'label': 'Cluster 7'},  # Crimson
-            8: {'color': '#7FFF00', 'label': 'Cluster 8'},  # Chartreuse
-            9: {'color': '#FF4500', 'label': 'Cluster 9'}   # Orange red
+            0: {'color': '#FF6347'}, 1: {'color': '#32CD32'}, 2: {'color': '#1E90FF'},
+            3: {'color': '#FFC0CB'}, 4: {'color': '#FFD700'}, 5: {'color': '#8A2BE2'},
+            6: {'color': '#00CED1'}, 7: {'color': '#DC143C'}, 8: {'color': '#7FFF00'},
+            9: {'color': '#FF4500'}
         }
-        
-        # Color cycle for logs
+    
+        # Log colors
         log_colors = [
             "darkred", "royalblue", "forestgreen", "orange", "mediumpurple",
             "teal", "crimson", "slategray", "black"
         ]
-        
+    
         n_logs = len(log_columns) if log_columns else 0
-        total_cols = n_logs + 2  # logs + lithology + cluster
+        total_cols = n_logs + 2  # Logs + Lithology + Clusters
     
-        fig, axes = plt.subplots(nrows=1, ncols=total_cols, figsize=(3.5 * total_cols, 8), sharey=True)
-    
+        fig, axes = plt.subplots(nrows=1, ncols=total_cols, figsize=(3.5 * total_cols, 10), sharey=True)
         if total_cols == 1:
             axes = [axes]
     
@@ -447,63 +444,61 @@ class KMeansClustering():
             for i, log_name in enumerate(log_columns):
                 ax = axes[i]
                 if log_name not in clustered_data.columns:
-                    print(f"Warning: Log column '{log_name}' not found in DataFrame.")
+                    print(f"Warning: Log column '{log_name}' not found.")
                     continue
                 color = log_colors[i % len(log_colors)]
                 ax.plot(clustered_data[log_name], depth, color=color, lw=2)
-                ax.set_xlabel(log_name, fontsize=18)
-                #ax.set_title(f'{log_name} Log', fontsize=12)
+                ax.set_xlabel(log_name, fontsize=12)
                 ax.invert_yaxis()
                 ax.xaxis.set_ticks_position('bottom')
                 ax.xaxis.set_label_position('bottom')
                 if i != 0:
                     ax.tick_params(labelleft=False)
                 ax.grid(True)
-        
-        # --- Plot lithology ---
+    
+        # --- Plot Lithology ---
         ax_lith = axes[n_logs]
         for j in range(len(depth) - 1):
-            lith = lithology[j].lower()
+            lith = lithology[j]
             if lith in lithology_labels:
-                hatch = lithology_labels[lith]['hatch']
-                color = lithology_labels[lith]['color']
-                ax_lith.fill_betweenx([depth[j], depth[j + 1]], 0, 1, facecolor=color, hatch=hatch, alpha=0.6, edgecolor='k')
-        
-        ax_lith.set_xlabel('Lithology', fontsize=15)
-        ax_lith.set_title('Lithology Profile', fontsize=18)
+                props = lithology_labels[lith]
+                ax_lith.fill_betweenx(
+                    [depth[j], depth[j + 1]], 0, 10, 
+                    facecolor=props['color'], hatch=props['hatch'], alpha=0.6, edgecolor='k'
+                )
+        ax_lith.set_xlim(0, 10)
+        ax_lith.set_xlabel('Lithology', fontsize=12)
+        ax_lith.set_title('Lithology Profile', fontsize=14)
         ax_lith.invert_yaxis()
-        #ax_lith.xaxis.set_ticks_position('bottom')
-        #ax_lith.xaxis.set_label_position('bottom')
-        #ax_lith.tick_params(labelleft=False, labelbottom=False)
     
         lith_handles = [
-            mpatches.Patch(facecolor=attrs['color'], hatch=attrs['hatch'], edgecolor='k', label=lith)
-            for lith, attrs in lithology_labels.items()
+            mpatches.Patch(facecolor=props['color'], hatch=props['hatch'], edgecolor='k', label=label)
+            for label, props in lithology_labels.items()
         ]
-        ax_lith.legend(handles=lith_handles, loc='upper center', bbox_to_anchor=(0.5, 1.15), ncol=len(lith_handles), fontsize=10, fancybox=True)
+        ax_lith.legend(handles=lith_handles, loc='upper center', bbox_to_anchor=(0.5, 1.15), ncol=len(lith_handles), fontsize=10)
     
-        # --- Plot clusters ---
+        # --- Plot Clusters ---
         ax_cluster = axes[n_logs + 1]
         for j in range(len(depth) - 1):
             cluster = cluster_column[j]
             if cluster in cluster_labels:
-                color = cluster_labels[cluster]['color']
-                ax_cluster.fill_betweenx([depth[j], depth[j + 1]], 0, 1, facecolor=color, alpha=0.6, edgecolor='k')
-        
+                ax_cluster.fill_betweenx(
+                    [depth[j], depth[j + 1]], 0, 10, 
+                    facecolor=cluster_labels[cluster]['color'], alpha=0.6, edgecolor='k'
+                )
+        ax_cluster.set_xlim(0, 10)
+        ax_cluster.set_xlabel('Clusters', fontsize=12)
+        ax_cluster.set_title('Cluster Profile', fontsize=14)
+        ax_cluster.invert_yaxis()
+    
         cluster_in_data = sorted(set(cluster_column) & set(cluster_labels.keys()))
         cluster_handles = [
-            mpatches.Patch(facecolor=cluster_labels[c]['color'], edgecolor='k', label=cluster_labels[c]['label'])
+            mpatches.Patch(facecolor=cluster_labels[c]['color'], edgecolor='k', label=f'Cluster {c}')
             for c in cluster_in_data
         ]
-        ax_cluster.legend(handles=cluster_handles, loc='upper center', bbox_to_anchor=(0.5, 1.15), ncol=len(cluster_handles), fontsize=10, fancybox=True)
-        #ax_cluster.set_xlabel('Clusters', fontsize=12)
-        ax_cluster.set_title('Cluster Profile', fontsize=18)
-        ax_cluster.invert_yaxis()
-        #ax_cluster.xaxis.set_ticks_position('top')
-        #ax_cluster.xaxis.set_label_position('top')
-        #ax_cluster.tick_params(labelleft=False, labelbottom=False)
-        
-        # --- Format all axes ---
+        ax_cluster.legend(handles=cluster_handles, loc='upper center', bbox_to_anchor=(0.5, 1.15), ncol=len(cluster_handles), fontsize=10)
+    
+        # --- Final formatting ---
         for ax in axes:
             ax.set_ylim(max(depth), min(depth))
             ax.grid(True)
@@ -512,7 +507,6 @@ class KMeansClustering():
         fig.suptitle('Lithology, Clusters and Logs by Depth', fontsize=16, y=1.05)
         plt.tight_layout()
         plt.show()
-
 
 
 
