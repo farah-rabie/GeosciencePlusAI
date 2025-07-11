@@ -537,53 +537,56 @@ class SVMClassification():
     def __init__(self):
         pass
 
-    def tune_svm(self, df_train, df_val, feature_columns, target_column, kernel='rbf', cv=5):
+    def train_svm(self, df_train, df_val, feature_columns, target_column, svm_params=None):
         """
-        Tune and train an SVM classifier using GridSearchCV.
-        
+        Train an SVM classifier using user-specified hyperparameters.
+    
         Parameters:
         - df_train: DataFrame containing training data
         - df_val: DataFrame containing validation data
         - feature_columns: List of feature column names
         - target_column: Name of the target column
-        - kernel: Kernel type for SVM ('linear', 'rbf', 'poly')
-        - cv: Number of cross-validation folds
-        
+        - svm_params: Dictionary of SVM hyperparameters (optional)
+    
         Returns:
-        - best_svm: Trained SVM model with best parameters
-        - best_params: Best hyperparameters found
+        - svm_model: Trained SVM model
+        - used_params: Hyperparameters used for training
         - accuracy: Accuracy on the validation set
-        - y_pred: Predicted values on validation set
+        - y_pred: Predicted values on the validation set
         """
+        from sklearn.svm import SVC
+        from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+    
+        # Extract features and labels
         X_train = df_train[feature_columns]
         y_train = df_train[target_column]
         X_val = df_val[feature_columns]
         y_val = df_val[target_column]
-
-        # Parameter grid for tuning
-        param_grid = {
-            'C': [0.1, 1, 10, 100],
-            'gamma': ['scale', 0.1, 0.01, 0.001],
-            'kernel': [kernel]
-        }
-
-        svm = SVC()
-
-        grid_search = GridSearchCV(svm, param_grid, cv=cv, verbose=1, n_jobs=-1)
-        grid_search.fit(X_train, y_train)
-
-        best_svm = grid_search.best_estimator_
-        best_params = grid_search.best_params_
-
-        y_pred = best_svm.predict(X_val)
+    
+        # Default parameters if none provided
+        if svm_params is None:
+            svm_params = {
+                'C': 1.0,
+                'kernel': 'rbf',
+                'gamma': 'scale',
+                'random_state': 42
+            }
+    
+        # Initialize and train SVM model
+        svm_model = SVC(**svm_params)
+        svm_model.fit(X_train, y_train)
+    
+        # Predict on validation set
+        y_pred = svm_model.predict(X_val)
         accuracy = accuracy_score(y_val, y_pred)
-
+    
+        # Print evaluation metrics
         print(f"Validation Accuracy: {accuracy:.4f}")
-        print("\nBest Parameters:", best_params)
+        print("\nUsed Parameters:", svm_params)
         print("\nClassification Report:\n", classification_report(y_val, y_pred, zero_division=0))
         print("\nConfusion Matrix:\n", confusion_matrix(y_val, y_pred))
-
-        return best_svm, best_params, accuracy, y_pred
+    
+        return svm_model, svm_params, accuracy, y_pred
 
     def test_svm(self, trained_model, df_test, feature_columns, target_column):
         """
