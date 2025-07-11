@@ -32,82 +32,69 @@ class DataProcessing():
         }
 
     def visualise_lithology_distribution(self, csv_file_paths, display='count'):
-        
         """
         Visualises the combined lithology distribution for multiple wells across multiple CSV files in a single plot.
-    
+
         Parameters:
             csv_file_paths (list): List of paths to CSV files containing well data.
+            display (str): One of 'count', 'percentage', or 'both'.
         """
-        
+
         # Create a dictionary to accumulate lithology counts across all wells
         combined_lithology_counts = {}
-    
+
         # Iterate through each CSV file
         for csv_file_path in csv_file_paths:
             df = pd.read_csv(csv_file_path)
-    
+
             # Check if 'LITHOLOGY' column exists
             if 'LITHOLOGY' not in df.columns:
                 print(f"Skipping {csv_file_path}: Missing 'LITHOLOGY' column.")
                 continue
-    
+
             # Get lithology counts for the current well
             lithology_counts = df['LITHOLOGY'].value_counts()
-            total = lithology_counts.sum()
-    
+
             # Update the combined lithology counts
             for lithology, count in lithology_counts.items():
-                if lithology in combined_lithology_counts:
-                    combined_lithology_counts[lithology] += count
-                else:
-                    combined_lithology_counts[lithology] = count
-    
+                combined_lithology_counts[lithology] = combined_lithology_counts.get(lithology, 0) + count
+
+        # Total count across all lithologies
+        total = sum(combined_lithology_counts.values())
+
         # Dictionary of lithology properties (color, hatch symbol)
         lithology_dict = self.lithology_labels
-    
+
         # Create the plot
         fig, ax = plt.subplots(figsize=(10, 6))
-        bars = []
-    
-        for lithology, count in combined_lithology_counts.items():
-            color = lithology_dict.get(lithology, {}).get('color', '#D2B48C')  # Default color if lithology not in dict
-            hatch = lithology_dict.get(lithology, {}).get('hatch', '')  # Default hatch if not defined
-    
-            bar = ax.bar(lithology, count, color=color, hatch=hatch)
-            bars.append(bar)
-    
-        # Add counts above the bars
-        for bar in bars:
-            for rect in bar:
-                percent = (count / total) * 100
-                label = ''
-                if display == 'count':
-                    label = str(int(count))
-                elif display == 'percentage':
-                    label = f"{percent:.1f}%"
-                elif display == 'both':
-                    label = f"{int(count)}\n({percent:.1f}%)"
 
-                ax.text(rect.get_x() + rect.get_width() / 2, rect.get_height(), label,
-                        ha='center', va='bottom', fontsize=10)
-    
-        # Create custom legend handles
-        legend_handles = [
-            Patch(facecolor=lithology_dict[lithology]["color"], hatch=lithology_dict[lithology]["hatch"], label=lithology)
-            for lithology in lithology_dict
-        ]
-    
-        # Add the legend
-        ax.legend(handles=legend_handles, title='Lithology', bbox_to_anchor=(1.05, 1), loc='upper left')
-    
-        # Add labels and title
-        ax.set_ylabel('Count', fontsize=10)
-        ax.set_xlabel('Lithology', fontsize=10)
-        ax.set_title('Combined Lithology Distribution Across Wells', fontsize=12)
-        plt.xticks(rotation=45, ha='right')  # Adjust x-axis labels for better readability
-    
-        plt.tight_layout()  # Adjust layout for better fit
+        for lithology, count in combined_lithology_counts.items():
+            color = lithology_dict.get(lithology, {}).get('color', '#D2B48C')  # Default tan color
+            hatch = lithology_dict.get(lithology, {}).get('hatch', '')
+
+            # Draw bar
+            bar = ax.bar(lithology, count, color=color, hatch=hatch)
+
+            # Correct percentage for this lithology
+            percent = (count / total) * 100
+
+            # Label above bar
+            if display == 'count':
+                label = str(int(count))
+            elif display == 'percentage':
+                label = f"{percent:.1f}%"
+            elif display == 'both':
+                label = f"{int(count)}\n({percent:.1f}%)"
+            else:
+                label = ''
+
+            ax.text(bar[0].get_x() + bar[0].get_width() / 2, bar[0].get_height(), label,
+                    ha='center', va='bottom', fontsize=10)
+
+        ax.set_ylabel('Count', fontsize=12)
+        ax.set_title('Combined Lithology Distribution Across Wells', fontsize=14)
+        plt.xticks(rotation=45)
+        plt.tight_layout()
         plt.show()
 
     def process_well_data(self, file_paths, selected_columns, train_data=False, val_data=False, show_stats=False, show_rows=False):
