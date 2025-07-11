@@ -495,6 +495,8 @@ class RFClassification():
         # Evaluate performance
         accuracy = accuracy_score(y_val, y_pred)
         print(f"Validation Accuracy: {accuracy:.4f}")
+        print("\nClassification Report:\n", classification_report(y_val, y_pred, zero_division=0))
+        print("\nConfusion Matrix:\n", confusion_matrix(y_val, y_pred))
     
         return rf_model, rf_params, accuracy, y_pred
 
