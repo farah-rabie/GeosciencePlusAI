@@ -404,8 +404,8 @@ class KNNClassification():
                 continue
             color = next(color_cycle)
             ax.plot(test_df[log_name], test_df['DEPTH'], lw=2.0, color=color)
-            ax.set_xlabel(log_name, fontsize=11)
-            ax.set_title(f'{log_name} Log', fontsize=12)
+            ax.set_xlabel(log_name, fontsize=15)
+            ax.set_title(f'{log_name} Log', fontsize=18)
             ax.invert_yaxis()
             ax.xaxis.set_ticks_position("bottom")
             ax.xaxis.set_label_position("bottom")
@@ -423,7 +423,7 @@ class KNNClassification():
                 ax_true.fill_betweenx([top, base], 0, 1, facecolor=color, hatch=hatch, edgecolor='k', alpha=0.6)
     
         #ax_true.set_xlabel('True Lithology', fontsize=11)
-        ax_true.set_title('True Lithology', fontsize=12)
+        ax_true.set_title('True Lithology', fontsize=18)
         ax_true.invert_yaxis()
         ax_true.xaxis.set_ticks_position("top")
         ax_true.xaxis.set_label_position("top")
@@ -439,7 +439,7 @@ class KNNClassification():
                 ax_pred.fill_betweenx([top, base], 0, 1, facecolor=color, hatch=hatch, edgecolor='k', alpha=0.6)
     
         #ax_pred.set_xlabel('Predicted Lithology', fontsize=11)
-        ax_pred.set_title('Predicted Lithology', fontsize=12)
+        ax_pred.set_title('Predicted Lithology', fontsize=18)
         ax_pred.invert_yaxis()
         #ax_pred.xaxis.set_ticks_position("top")
         #ax_pred.xaxis.set_label_position("top")
@@ -461,10 +461,10 @@ class KNNClassification():
         # Apply consistent y-limits
         for ax in axes:
             ax.set_ylim(max(depth), min(depth))  # Invert depth
-            ax.grid(True)
+            #ax.grid(True)
     
         fig.subplots_adjust(wspace=0.05, left=0.05, right=0.98, top=0.90, bottom=0.05)
-        fig.suptitle('Log Curves with True vs Predicted Lithology', fontsize=14, y=0.93)
+        #fig.suptitle('Log Curves with True vs Predicted Lithology', fontsize=14, y=0.93)
         plt.show()
 
 
