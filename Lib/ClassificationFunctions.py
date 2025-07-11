@@ -342,14 +342,15 @@ class KNNClassification():
         print("Accuracy of KNN when tested is", accuracy)
         return accuracy, y_pred
 
-    def plot_lithology_comparison(self, test_df, predicted_lithology, use_hatch=True):
+    def plot_lithology_comparison(self, test_df, predicted_lithology, use_hatch=True, log_columns=None):
         """
         Visualises true and predicted lithology profiles for a given depth using test data.
-    
+        
         Parameters:
             test_df (pd.DataFrame): The test DataFrame with 'DEPTH' and 'LITHOLOGY' columns.
             predicted_lithology (np.array): Predicted lithology labels from the model.
             use_hatch (bool): Whether to use hatch patterns (can be disabled for speed).
+            log_columns (list or None): Optional list of feature/log column names to plot alongside lithology.
         """
     
         # Define lithology labels with colors and hatch patterns
@@ -362,11 +363,11 @@ class KNNClassification():
             'claystone': {'color': '#228B22', 'hatch': '--'}  
         }
     
-        # Extract depth and true lithology
-        depth_for_lithology = test_df['DEPTH'].values
+        # Extract depth and lithology
+        depth = test_df['DEPTH'].values
         true_lithology = test_df['LITHOLOGY'].values
     
-        # Group consecutive intervals with the same lithology
+        # Helper function to group intervals
         def group_intervals(depths, liths):
             grouped = []
             current_lith = liths[0]
@@ -379,13 +380,19 @@ class KNNClassification():
             grouped.append((start_depth, depths[-1], current_lith))
             return grouped
     
-        true_blocks = group_intervals(depth_for_lithology, true_lithology)
-        pred_blocks = group_intervals(depth_for_lithology, predicted_lithology)
+        true_blocks = group_intervals(depth, true_lithology)
+        pred_blocks = group_intervals(depth, predicted_lithology)
     
-        # Create subplots
-        fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(12, 8), sharey=True)
+        # Determine number of subplots (2 for lithology + n for logs)
+        n_logs = len(log_columns) if log_columns else 0
+        total_plots = 2 + n_logs
+        fig, axes = plt.subplots(nrows=1, ncols=total_plots, figsize=(3.5 * total_plots, 8), sharey=True)
     
-        # --- PLOT 1: True Lithology ---
+        # Ensure axes is always iterable
+        if total_plots == 1:
+            axes = [axes]
+    
+        # --- Plot 1: True Lithology ---
         ax1 = axes[0]
         for start, end, lith in true_blocks:
             lith = lith.lower()
@@ -394,21 +401,21 @@ class KNNClassification():
                 hatch = lithology_labels[lith]['hatch'] if use_hatch else ''
                 ax1.fill_betweenx([start, end], 0, 1, facecolor=color, hatch=hatch, alpha=0.6)
     
-        ax1.set_xlabel('True Lithology', fontsize=12)
-        ax1.set_ylabel('Depth (m)', fontsize=12)
-        ax1.set_title('True Lithology Profile', fontsize=14)
+        ax1.set_xlabel('True Lithology')
+        ax1.set_ylabel('Depth (m)')
+        ax1.set_title('True Lithology')
         ax1.invert_yaxis()
     
-        # Add legend
+        # Legend
         handles = [
             mpatches.Patch(facecolor=attrs['color'],
                            hatch=attrs['hatch'] if use_hatch else '',
                            edgecolor='k', label=lith)
             for lith, attrs in lithology_labels.items()
         ]
-        ax1.legend(handles=handles, loc='best')
+        ax1.legend(handles=handles, loc='best', fontsize=9)
     
-        # --- PLOT 2: Predicted Lithology ---
+        # --- Plot 2: Predicted Lithology ---
         ax2 = axes[1]
         for start, end, lith in pred_blocks:
             lith = lith.lower()
@@ -417,8 +424,21 @@ class KNNClassification():
                 hatch = lithology_labels[lith]['hatch'] if use_hatch else ''
                 ax2.fill_betweenx([start, end], 0, 1, facecolor=color, hatch=hatch, alpha=0.6)
     
-        ax2.set_xlabel('Predicted Lithology', fontsize=12)
-        ax2.set_title('Predicted Lithology Profile', fontsize=14)
+        ax2.set_xlabel('Predicted Lithology')
+        ax2.set_title('Predicted Lithology')
+    
+        # --- Plot logs if provided ---
+        if log_columns:
+            for idx, col in enumerate(log_columns):
+                ax = axes[2 + idx]
+                if col not in test_df.columns:
+                    print(f"Warning: {col} not in DataFrame.")
+                    continue
+                ax.plot(test_df[col], test_df['DEPTH'], label=col, color='darkorange')
+                ax.set_xlabel(col)
+                ax.set_title(f'{col} Log')
+                ax.invert_yaxis()
+                ax.grid(True)
     
         plt.tight_layout()
         plt.show()
@@ -464,8 +484,6 @@ class RFClassification():
         - accuracy: Accuracy on the validation set
         - y_pred: Predicted values on the validation set
         """
-        from sklearn.ensemble import RandomForestClassifier
-        from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
     
         # Extract features and target variables
         X_train = df_train[feature_columns]
@@ -556,8 +574,6 @@ class SVMClassification():
         - accuracy: Accuracy on the validation set
         - y_pred: Predicted values on the validation set
         """
-        from sklearn.svm import SVC
-        from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
     
         # Extract features and labels
         X_train = df_train[feature_columns]
