@@ -31,7 +31,7 @@ class DataProcessing():
             'Claystone': {'color': '#228B22', 'hatch': '--'}  
         }
 
-    def visualise_lithology_distribution(self, csv_file_paths):
+    def visualise_lithology_distribution(self, csv_file_paths, display='count'):
         
         """
         Visualises the combined lithology distribution for multiple wells across multiple CSV files in a single plot.
@@ -79,7 +79,16 @@ class DataProcessing():
         # Add counts above the bars
         for bar in bars:
             for rect in bar:
-                ax.text(rect.get_x() + rect.get_width() / 2, rect.get_height(), str(int(rect.get_height())),
+                percent = (count / total) * 100
+                label = ''
+                if display == 'count':
+                    label = str(int(count))
+                elif display == 'percentage':
+                    label = f"{percent:.1f}%"
+                elif display == 'both':
+                    label = f"{int(count)}\n({percent:.1f}%)"
+
+                ax.text(rect.get_x() + rect.get_width() / 2, rect.get_height(), label,
                         ha='center', va='bottom', fontsize=10)
     
         # Create custom legend handles
