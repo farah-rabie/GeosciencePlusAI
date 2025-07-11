@@ -408,12 +408,12 @@ class KMeansClustering():
         cluster_column = clustered_data['Cluster'].values
     
         lithology_labels = {
-            'sandstone': {'color': '#ffff00', 'hatch': ''},
-            'marl': {'color': '#80ffff', 'hatch': ''}, 
-            'limestone': {'color': '#4682B4', 'hatch': ''},
+            'sandstone': {'color': '#ffff00', 'hatch': '..'},
+            'marl': {'color': '#80ffff', 'hatch': ''},   # You can keep this empty if you want no hatch here
+            'limestone': {'color': '#4682B4', 'hatch': '++'},
             'coal': {'color': 'black', 'hatch': ''},
-            'silt': {'color': '#7cfc00', 'hatch': ''},
-            'claystone': {'color': '#228B22', 'hatch': ''}  
+            'silt': {'color': '#7cfc00', 'hatch': '||'},
+            'claystone': {'color': '#228B22', 'hatch': '--'}  
         }
     
         cluster_labels = {
