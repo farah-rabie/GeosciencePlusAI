@@ -426,7 +426,7 @@ class KMeansClustering():
         n_logs = len(log_columns) if log_columns else 0
         total_cols = n_logs + 2  # logs + lithology + clusters
     
-        fig, axes = plt.subplots(1, total_cols, figsize=(3 * total_cols, 10), sharey=True)
+        fig, axes = plt.subplots(1, total_cols, figsize=(3 * total_cols, 15), sharey=True)
     
         if total_cols == 1:
             axes = [axes]  # Ensure axes is iterable
@@ -438,7 +438,7 @@ class KMeansClustering():
                 ax = axes[i]
                 if log in clustered_data.columns:
                     ax.plot(clustered_data[log], depth, color=log_colors[i % len(log_colors)], lw=1.5)
-                    ax.set_xlabel(log, fontsize=10)
+                    ax.set_xlabel(log, fontsize=14)
                     ax.invert_yaxis()
                     ax.grid(True)
                     if i != 0:
@@ -456,14 +456,14 @@ class KMeansClustering():
                 ax_lith.fill_betweenx([depth[j], depth[j + 1]], 0, 1, facecolor=props['color'],
                                       hatch=props['hatch'], alpha=0.6, edgecolor='none')
         ax_lith.set_xlim(0, 1)
-        ax_lith.set_xlabel('Lithology', fontsize=10)
-        ax_lith.set_title('Lithology', fontsize=12)
+        ax_lith.set_xlabel('Lithology', fontsize=14)
+        #ax_lith.set_title('Lithology', fontsize=12)
         ax_lith.invert_yaxis()
         lith_handles = [
             mpatches.Patch(facecolor=props['color'], hatch=props['hatch'], edgecolor='k', label=label)
             for label, props in lithology_labels.items()
         ]
-        ax_lith.legend(handles=lith_handles, loc='upper center', bbox_to_anchor=(0.5, 1.05), fontsize=8, ncol=2)
+        ax_lith.legend(handles=lith_handles, loc='upper center', bbox_to_anchor=(0.5, 1.05), fontsize=12, ncol=2)
     
         # --- Cluster plot ---
         ax_cluster = axes[n_logs + 1]
@@ -473,21 +473,21 @@ class KMeansClustering():
                 color = cluster_labels[cluster]['color']
                 ax_cluster.fill_betweenx([depth[j], depth[j + 1]], 0, 1, facecolor=color, alpha=0.6, edgecolor='none')
         ax_cluster.set_xlim(0, 1)
-        ax_cluster.set_xlabel('Cluster', fontsize=10)
-        ax_cluster.set_title('Cluster Profile', fontsize=12)
+        ax_cluster.set_xlabel('Cluster', fontsize=14)
+        #ax_cluster.set_title('Cluster Profile', fontsize=12)
         ax_cluster.invert_yaxis()
         cluster_handles = [
             mpatches.Patch(facecolor=cluster_labels[c]['color'], edgecolor='k', label=f'Cluster {c}')
             for c in sorted(set(cluster_column) & set(cluster_labels.keys()))
         ]
-        ax_cluster.legend(handles=cluster_handles, loc='upper center', bbox_to_anchor=(0.5, 1.05), fontsize=8, ncol=3)
+        ax_cluster.legend(handles=cluster_handles, loc='upper center', bbox_to_anchor=(0.5, 1.05), fontsize=12, ncol=3)
     
         # Final formatting
         for ax in axes:
             ax.set_ylim(max(depth), min(depth))
             ax.grid(True)
     
-        fig.subplots_adjust(wspace=0.4)
+        fig.subplots_adjust(wspace=0.1)
         plt.tight_layout()
         plt.show()
 
