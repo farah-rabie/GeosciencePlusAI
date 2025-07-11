@@ -97,7 +97,7 @@ class DataProcessing():
         plt.tight_layout()
         plt.show()
 
-    def process_well_data(self, file_paths, selected_columns, train_data=False, val_data=False, show_stats=False, show_rows=False):
+    def process_well_data(self, file_paths, selected_columns, method='standard', train_data=False, val_data=False, show_stats=False, show_rows=False):
         
         """
         Combines and processes data from multiple CSV files.
@@ -105,7 +105,7 @@ class DataProcessing():
         Parameters:
             file_paths (list): List of file paths for the CSV files.
             selected_columns (list): List of columns to extract and process.
-            train_data (bool): If True, combines all data into a single DataFrame + computes and stores standardisation parameters.
+            train_data (bool): If True, combines all data into a single DataFrame + computes and stores scaling parameters.
             val_data (bool): If True, combines all data into a single DataFrame.
                              If neither train_data nor val_data are True >> False >> keeps the data for each file separate.
             show_stats (bool): Whether to display descriptive statistics of the processed data.
@@ -142,8 +142,8 @@ class DataProcessing():
     
         if train_data: # if train_data is True
             combined_df = pd.concat(combined_data, ignore_index=True) 
-            columns_to_standardise = [col for col in combined_df.columns if col != 'LITHOLOGY'] # Exclude 'LITHOLOGY' from standardisation 
-            self.compute_scaling_params(combined_df[columns_to_standardise])  # compute scaling parameters on selected columns only
+            columns_to_scale = [col for col in combined_df.columns if col != 'LITHOLOGY'] # Exclude 'LITHOLOGY' from scaling 
+            self.compute_scaling_params(combined_df[columns_to_scale], method=method)  # compute scaling parameters on selected columns only
             if show_stats: # Show statistics if enabled
                 print("\nDescriptive Statistics of Data:")
                 print(combined_df.describe())  # Shows descriptive statistics for the DataFrame
