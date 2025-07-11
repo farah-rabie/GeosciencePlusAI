@@ -425,8 +425,8 @@ class KNNClassification():
         #ax_true.set_xlabel('True Lithology', fontsize=11)
         ax_true.set_title('True Lithology', fontsize=18)
         ax_true.invert_yaxis()
-        ax_true.xaxis.set_ticks_position("top")
-        ax_true.xaxis.set_label_position("top")
+        #ax_true.xaxis.set_ticks_position("top")
+        #ax_true.xaxis.set_label_position("top")
         ax_true.tick_params(labelleft=False, labelbottom=False)
     
         # --- Predicted Lithology ---
@@ -456,7 +456,7 @@ class KNNClassification():
             for lith, props in lithology_labels.items()
         ]
         ax_true.legend(handles=handles, loc='upper center', bbox_to_anchor=(0.5, 1.15),
-                       ncol=len(handles), fontsize=10, fancybox=True)
+                       ncol=len(handles), fontsize=15, fancybox=True)
     
         # Apply consistent y-limits
         for ax in axes:
