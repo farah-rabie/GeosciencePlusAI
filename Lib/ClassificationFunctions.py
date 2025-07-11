@@ -434,8 +434,8 @@ class KNNClassification():
         for top, base, lith in pred_blocks:
             lith = lith.lower()
             if lith in self.lithology_labels:
-                color = self.lithology_labels[lith]['color']
-                hatch = self.lithology_labels[lith]['hatch'] if use_hatch else ''
+                color = lithology_labels[lith]['color']
+                hatch = lithology_labels[lith]['hatch'] if use_hatch else ''
                 ax_pred.fill_betweenx([top, base], 0, 1, facecolor=color, hatch=hatch, edgecolor='k', alpha=0.6)
     
         ax_pred.set_xlabel('Predicted Lithology', fontsize=11)
