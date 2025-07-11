@@ -5,6 +5,7 @@ import seaborn as sns
 from matplotlib.patches import Patch
 import matplotlib.patches as mpatches
 from sklearn.utils import shuffle
+from itertools import groupby
 
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import accuracy_score
@@ -367,79 +368,89 @@ class KNNClassification():
         depth = test_df['DEPTH'].values
         true_lithology = test_df['LITHOLOGY'].values
     
-        # Helper function to group intervals
+        # Helper to group lithology intervals
         def group_intervals(depths, liths):
             grouped = []
-            current_lith = liths[0]
-            start_depth = depths[0]
-            for i in range(1, len(depths)):
-                if liths[i] != current_lith:
-                    grouped.append((start_depth, depths[i-1], current_lith))
-                    current_lith = liths[i]
-                    start_depth = depths[i]
-            grouped.append((start_depth, depths[-1], current_lith))
+            current = liths[0]
+            start = depths[0]
+            for i in range(1, len(liths)):
+                if liths[i] != current:
+                    grouped.append((start, depths[i-1], current))
+                    start = depths[i]
+                    current = liths[i]
+            grouped.append((start, depths[-1], current))
             return grouped
     
         true_blocks = group_intervals(depth, true_lithology)
         pred_blocks = group_intervals(depth, predicted_lithology)
     
-        # Determine number of subplots (2 for lithology + n for logs)
+        # Plot layout: logs (if any) + true lith + predicted lith
         n_logs = len(log_columns) if log_columns else 0
-        total_plots = 2 + n_logs
-        fig, axes = plt.subplots(nrows=1, ncols=total_plots, figsize=(3.5 * total_plots, 8), sharey=True)
+        total_cols = n_logs + 2
+        fig, axes = plt.subplots(nrows=1, ncols=total_cols, figsize=(3.5 * total_cols, 8), sharey=True)
     
         # Ensure axes is always iterable
-        if total_plots == 1:
+        if total_cols == 1:
             axes = [axes]
+        
+        # --- Plot logs ---
+        for i in range(n_logs):
+            log_name = log_columns[i]
+            ax = axes[i]
+            if log_name not in test_df.columns:
+                print(f"Warning: {log_name} not found in DataFrame.")
+                continue
+            ax.plot(test_df[log_name], test_df['DEPTH'], lw=2.0, color='darkorange')
+            ax.set_xlabel(log_name, fontsize=11)
+            ax.set_title(f'{log_name} Log', fontsize=12)
+            ax.invert_yaxis()
+            ax.grid(True)
     
-        # --- Plot 1: True Lithology ---
-        ax1 = axes[0]
-        for start, end, lith in true_blocks:
+        # --- True Lithology ---
+        ax_true = axes[n_logs]
+        for top, base, lith in true_blocks:
             lith = lith.lower()
-            if lith in lithology_labels:
-                color = lithology_labels[lith]['color']
-                hatch = lithology_labels[lith]['hatch'] if use_hatch else ''
-                ax1.fill_betweenx([start, end], 0, 1, facecolor=color, hatch=hatch, alpha=0.6)
+            if lith in self.lithology_labels:
+                color = self.lithology_labels[lith]['color']
+                hatch = self.lithology_labels[lith]['hatch'] if use_hatch else ''
+                ax_true.fill_betweenx([top, base], 0, 1, facecolor=color, hatch=hatch, edgecolor='k', alpha=0.6)
     
-        ax1.set_xlabel('True Lithology')
-        ax1.set_ylabel('Depth (m)')
-        ax1.set_title('True Lithology')
-        ax1.invert_yaxis()
+        ax_true.set_xlabel('True Lithology', fontsize=11)
+        ax_true.set_title('True Lithology', fontsize=12)
+        ax_true.invert_yaxis()
     
-        # Legend
+        # --- Predicted Lithology ---
+        ax_pred = axes[n_logs + 1]
+        for top, base, lith in pred_blocks:
+            lith = lith.lower()
+            if lith in self.lithology_labels:
+                color = self.lithology_labels[lith]['color']
+                hatch = self.lithology_labels[lith]['hatch'] if use_hatch else ''
+                ax_pred.fill_betweenx([top, base], 0, 1, facecolor=color, hatch=hatch, edgecolor='k', alpha=0.6)
+    
+        ax_pred.set_xlabel('Predicted Lithology', fontsize=11)
+        ax_pred.set_title('Predicted Lithology', fontsize=12)
+    
+        # --- Legend from self.lithology_labels ---
         handles = [
-            mpatches.Patch(facecolor=attrs['color'],
-                           hatch=attrs['hatch'] if use_hatch else '',
+            mpatches.Patch(facecolor=props['color'],
+                           hatch=props['hatch'] if use_hatch else '',
                            edgecolor='k', label=lith)
-            for lith, attrs in lithology_labels.items()
+            for lith, props in self.lithology_labels.items()
         ]
-        ax1.legend(handles=handles, loc='best', fontsize=9)
+        ax_true.legend(handles=handles, loc='upper center', bbox_to_anchor=(0.5, 1.15),
+                       ncol=len(handles), fontsize=10, fancybox=True)
     
-        # --- Plot 2: Predicted Lithology ---
-        ax2 = axes[1]
-        for start, end, lith in pred_blocks:
-            lith = lith.lower()
-            if lith in lithology_labels:
-                color = lithology_labels[lith]['color']
-                hatch = lithology_labels[lith]['hatch'] if use_hatch else ''
-                ax2.fill_betweenx([start, end], 0, 1, facecolor=color, hatch=hatch, alpha=0.6)
+        # Format all axes
+        for i, ax in enumerate(axes):
+            ax.set_ylim(max(depth), min(depth))
+            ax.xaxis.set_ticks_position("top")
+            ax.xaxis.set_label_position("top")
+            if i != 0:
+                ax.tick_params(labelleft=False)
     
-        ax2.set_xlabel('Predicted Lithology')
-        ax2.set_title('Predicted Lithology')
-    
-        # --- Plot logs if provided ---
-        if log_columns:
-            for idx, col in enumerate(log_columns):
-                ax = axes[2 + idx]
-                if col not in test_df.columns:
-                    print(f"Warning: {col} not in DataFrame.")
-                    continue
-                ax.plot(test_df[col], test_df['DEPTH'], label=col, color='darkorange')
-                ax.set_xlabel(col)
-                ax.set_title(f'{col} Log')
-                ax.invert_yaxis()
-                ax.grid(True)
-    
+        fig.subplots_adjust(wspace=0.5)
+        fig.suptitle('Log Curves with True vs Predicted Lithology', fontsize=14, y=0.93)
         plt.tight_layout()
         plt.show()
         
