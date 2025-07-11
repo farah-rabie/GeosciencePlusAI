@@ -430,67 +430,56 @@ class RFClassification():
     def __init__(self):
         pass
 
-    def tune_random_forest(self, df_train, df_val, feature_columns, target_column, n_iter=20, cv=5):
-        
+    def train_random_forest(self, df_train, df_val, feature_columns, target_column, rf_params=None):
         """
-        Tune a Random Forest classifier using RandomizedSearchCV for lithology classification.
+        Trains a Random Forest classifier with user-specified hyperparameters.
     
         Parameters:
         - df_train: DataFrame containing training data
         - df_val: DataFrame containing validation data
         - feature_columns: List of feature column names
         - target_column: Name of the target column
-        - n_iter: Number of iterations for RandomizedSearchCV (default: 20)
-        - cv: Number of cross-validation folds (default: 5)
-
+        - rf_params: Dictionary of RandomForestClassifier hyperparameters (optional)
+    
         Returns:
-        - best_rf: Trained Random Forest model with best parameters
-        - best_params: Best hyperparameters found
-        - accuracy: Accuracy on the test set
-        - y_pred: Predicted values on the test set
+        - rf_model: Trained Random Forest model
+        - rf_params: Used hyperparameters
+        - accuracy: Accuracy on the validation set
+        - y_pred: Predicted values on the validation set
         """
-
+        from sklearn.ensemble import RandomForestClassifier
+        from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+    
         # Extract features and target variables
         X_train = df_train[feature_columns]
         y_train = df_train[target_column]
         X_val = df_val[feature_columns]
         y_val = df_val[target_column]
-
-        # Define hyperparameter grid
-        param_dist = {
-            'n_estimators': np.arange(50, 300, 50),
-            'max_depth': [None, 10, 20, 30, 40, 50],
-            'min_samples_split': [2, 5, 10],
-            'min_samples_leaf': [1, 2, 4],
-            'max_features': ['sqrt', 'log2', None],
-            'bootstrap': [True, False]
-        }
     
-        # Initialise the classifier
-        rf = RandomForestClassifier(random_state=42)
-
-        # Randomised Search
-        random_search = RandomizedSearchCV(rf, param_distributions=param_dist, 
-                                           n_iter=n_iter, cv=cv, verbose=2, 
-                                           n_jobs=-1, random_state=42)
-
-        # Fit model
-        random_search.fit(X_train, y_train)
-
-        # Get best model
-        best_rf = random_search.best_estimator_
-        best_params = random_search.best_params_
-
-        # Make predictions
-        y_pred = best_rf.predict(X_val)
-
+        # Use default parameters if none provided
+        if rf_params is None:
+            rf_params = {
+                'n_estimators': 100,
+                'max_depth': None,
+                'min_samples_split': 2,
+                'min_samples_leaf': 1,
+                'max_features': 'auto',
+                'bootstrap': True,
+                'random_state': 42
+            }
+    
+        # Initialise and train the model
+        rf_model = RandomForestClassifier(**rf_params)
+        rf_model.fit(X_train, y_train)
+    
+        # Predict on validation data
+        y_pred = rf_model.predict(X_val)
+    
         # Evaluate performance
         accuracy = accuracy_score(y_val, y_pred)
         print(f"Validation Accuracy: {accuracy:.4f}")
-        print("\nClassification Report:\n", classification_report(y_val, y_pred, zero_division=0))
-        print("\nConfusion Matrix:\n", confusion_matrix(y_val, y_pred))
-
-        return best_rf, best_params, accuracy, y_pred
+    
+        return rf_model, rf_params, accuracy, y_pred
 
     def test_random_forest(self, trained_model, df_test, feature_columns, target_column):
        
