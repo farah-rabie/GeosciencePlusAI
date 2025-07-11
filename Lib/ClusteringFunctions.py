@@ -463,7 +463,7 @@ class KMeansClustering():
             mpatches.Patch(facecolor=props['color'], hatch=props['hatch'], edgecolor='k', label=label)
             for label, props in lithology_labels.items()
         ]
-        ax_lith.legend(handles=lith_handles, loc='upper center', bbox_to_anchor=(0.5, 1.05), fontsize=12, ncol=2)
+        ax_lith.legend(handles=lith_handles, loc='upper right', bbox_to_anchor=(0.5, 1.05), fontsize=12, ncol=2)
     
         # --- Cluster plot ---
         ax_cluster = axes[n_logs + 1]
