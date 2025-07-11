@@ -468,7 +468,7 @@ class KMeansClustering():
             if lith in lithology_labels:
                 props = lithology_labels[lith]
                 ax_lith.fill_betweenx([start, end], 0, 1, facecolor=props['color'],
-                                      hatch='', alpha=0.6, edgecolor='none')
+                                      hatch=props['hatch'], alpha=0.6, edgecolor='none')
         ax_lith.set_xlabel('Lithology', fontsize=14)
         ax_lith.invert_yaxis()
         lith_handles = [
