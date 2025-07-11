@@ -391,13 +391,14 @@ class KMeansClustering():
     
         return test_clustered
     
-    def visualise_lithology_clusters(self, clustered_data, log_columns=None):
+    def visualise_lithology_clusters(self, clustered_data, log_columns=None, log_sample_factor=1):
         """
         Visualises lithology and cluster predictions along with log curves on depth profiles.
         
         Parameters:
             clustered_data (pd.DataFrame): Must contain 'DEPTH', 'LITHOLOGY', and 'Cluster'.
             log_columns (list): Optional list of log column names to plot.
+            log_sample_factor (int): Downsampling factor for logs to speed plotting (default 1 = no downsampling).
         """
     
         # Sort and extract required columns
@@ -407,12 +408,12 @@ class KMeansClustering():
         cluster_column = clustered_data['Cluster'].values
     
         lithology_labels = {
-            'sandstone': {'color': '#ffff00', 'hatch': '..'},
+            'sandstone': {'color': '#ffff00', 'hatch': ''},
             'marl': {'color': '#80ffff', 'hatch': ''}, 
-            'limestone': {'color': '#4682B4', 'hatch': '++'},
+            'limestone': {'color': '#4682B4', 'hatch': ''},
             'coal': {'color': 'black', 'hatch': ''},
-            'silt': {'color': '#7cfc00', 'hatch': '||'},
-            'claystone': {'color': '#228B22', 'hatch': '--'}  
+            'silt': {'color': '#7cfc00', 'hatch': ''},
+            'claystone': {'color': '#228B22', 'hatch': ''}  
         }
     
         cluster_labels = {
@@ -422,22 +423,35 @@ class KMeansClustering():
             9: {'color': '#FF4500'}
         }
     
+        # Function to group consecutive identical categories
+        def group_intervals(depths, categories):
+            grouped = []
+            for key, group in groupby(enumerate(categories), lambda x: x[1]):
+                indices = [i for i, val in group]
+                start = depths[indices[0]]
+                # Use next depth for upper bound if possible, else last depth
+                end_idx = indices[-1] + 1
+                end = depths[end_idx] if end_idx < len(depths) else depths[-1]
+                grouped.append((key, start, end))
+            return grouped
+    
         # Plot setup
         n_logs = len(log_columns) if log_columns else 0
         total_cols = n_logs + 2  # logs + lithology + clusters
     
         fig, axes = plt.subplots(1, total_cols, figsize=(3 * total_cols, 15), sharey=True)
-    
         if total_cols == 1:
-            axes = [axes]  # Ensure axes is iterable
+            axes = [axes]  # Make iterable if only one subplot
     
-        # --- Plot log tracks ---
+        # Plot log tracks (downsample if requested)
         if log_columns:
             log_colors = ['darkred', 'royalblue', 'forestgreen', 'orange', 'purple', 'black']
             for i, log in enumerate(log_columns):
                 ax = axes[i]
                 if log in clustered_data.columns:
-                    ax.plot(clustered_data[log], depth, color=log_colors[i % len(log_colors)], lw=1.5)
+                    x = clustered_data[log].values[::log_sample_factor]
+                    y = depth[::log_sample_factor]
+                    ax.plot(x, y, color=log_colors[i % len(log_colors)], lw=1.5)
                     ax.set_xlabel(log, fontsize=14)
                     ax.invert_yaxis()
                     ax.grid(True)
@@ -447,37 +461,33 @@ class KMeansClustering():
                     ax.set_visible(False)
                     print(f"Log column '{log}' not found in the dataframe.")
     
-        # --- Lithology plot ---
+        # Lithology plot - grouped intervals
         ax_lith = axes[n_logs]
-        for j in range(len(depth) - 1):
-            lith = lithology[j]
+        lith_groups = group_intervals(depth, lithology)
+        for lith, start, end in lith_groups:
             if lith in lithology_labels:
                 props = lithology_labels[lith]
-                ax_lith.fill_betweenx([depth[j], depth[j + 1]], 0, 1, facecolor=props['color'],
-                                      hatch=props['hatch'], alpha=0.6, edgecolor='none')
-        #ax_lith.set_xlim(0, 1)
+                ax_lith.fill_betweenx([start, end], 0, 1, facecolor=props['color'],
+                                      hatch='', alpha=0.6, edgecolor='none')
         ax_lith.set_xlabel('Lithology', fontsize=14)
-        #ax_lith.set_title('Lithology', fontsize=12)
         ax_lith.invert_yaxis()
         lith_handles = [
-            mpatches.Patch(facecolor=props['color'], hatch=props['hatch'], edgecolor='k', label=label)
+            mpatches.Patch(facecolor=props['color'], label=label)
             for label, props in lithology_labels.items()
         ]
         ax_lith.legend(handles=lith_handles, loc='upper center', bbox_to_anchor=(0.5, 1.15), fontsize=12, ncol=2)
     
-        # --- Cluster plot ---
+        # Cluster plot - grouped intervals
         ax_cluster = axes[n_logs + 1]
-        for j in range(len(depth) - 1):
-            cluster = cluster_column[j]
+        cluster_groups = group_intervals(depth, cluster_column)
+        for cluster, start, end in cluster_groups:
             if cluster in cluster_labels:
                 color = cluster_labels[cluster]['color']
-                ax_cluster.fill_betweenx([depth[j], depth[j + 1]], 0, 1, facecolor=color, alpha=0.6, edgecolor='none')
-        #ax_cluster.set_xlim(0, 1)
+                ax_cluster.fill_betweenx([start, end], 0, 1, facecolor=color, alpha=0.6, edgecolor='none')
         ax_cluster.set_xlabel('Cluster', fontsize=14)
-        #ax_cluster.set_title('Cluster Profile', fontsize=12)
         ax_cluster.invert_yaxis()
         cluster_handles = [
-            mpatches.Patch(facecolor=cluster_labels[c]['color'], edgecolor='k', label=f'Cluster {c}')
+            mpatches.Patch(facecolor=cluster_labels[c]['color'], label=f'Cluster {c}')
             for c in sorted(set(cluster_column) & set(cluster_labels.keys()))
         ]
         ax_cluster.legend(handles=cluster_handles, loc='center left', bbox_to_anchor=(0.5, 1.05), fontsize=12, ncol=3)
