@@ -243,9 +243,9 @@ class DataProcessing():
             print(f"\nScaling Method: {method}")
             print("Scaling Parameters:")
             for column, params in self.scaling_params.items():
-                print(f"{column}: {params}")
-            print("\nDescriptive Statistics of Scaled Data:")
-            print(scaled_df.describe())
+                # Convert all values to plain float before printing
+                clean_params = {k: float(v) for k, v in params.items()}
+                print(f"{column}: {clean_params}")
     
         return scaled_df
 
