@@ -134,6 +134,8 @@ class DataProcessing():
             if 'RT' in df.columns:
                 df['log_RT'] = np.log1p(df['RT'])
                 df.drop(columns=['RT'], inplace=True)  # Remove the original 'RT' column
+            if 'GR' in df.columns:
+                df = df[df['GR'] <= 150]
         
             individual_dataframes.append(df) # Append the processed DataFrame to the list of individual DataFrames
             combined_data.append(df)  # Add to the combined data list for further merging
@@ -173,57 +175,79 @@ class DataProcessing():
                     print(df.head())  # Shows the first few rows of each individual DataFrame
             return individual_dataframes  # Return the list of individual DataFrames
 
-    def compute_standardisation_params(self, df):
-       
+    def compute_scaling_params(self, df, method='standard'):
         """
-        Computes and stores standardisation parameters (min, max) for each column.
-        
-        Parameters:
-            df (pd.DataFrame): DataFrame containing the data for which to compute standardisation parameters.
-        """
-        
-        # Compute and store mean and std values for each column
-        self.standardisation_params = {
-            column: {
-                "mean": df[column].mean(),
-                "std": df[column].std()
-            }
-            for column in df.columns 
-        }
-
-    def standardise_dataframe(self, df, show_stats=False):
-        """
-        standardises the data using the stored standardisation parameters.
+        Computes and stores scaling parameters for each column.
     
         Parameters:
-            df (pd.DataFrame): DataFrame to standardise.
-            show_stats (bool): Whether to display descriptive statistics of the standardised data.
-        
+            df (pd.DataFrame): DataFrame containing the data.
+            method (str): 'standard', 'minmax_01', or 'minmax_11'.
+        """
+        self.scaling_method = method
+        self.scaling_params = {}
+    
+        for column in df.columns:
+            if column in ['DEPTH', 'LITHOLOGY']:
+                continue
+    
+            if method == 'standard':
+                self.scaling_params[column] = {
+                    'mean': df[column].mean(),
+                    'std': df[column].std()
+                }
+            elif method in ['minmax_01', 'minmax_11']:
+                self.scaling_params[column] = {
+                    'min': df[column].min(),
+                    'max': df[column].max()
+                }
+            else:
+                raise ValueError("Unsupported method. Choose from 'standard', 'minmax_01', 'minmax_11'.")
+
+    def scale_dataframe(self, df, show_stats=False):
+        """
+        Scales the data using the stored scaling parameters.
+    
+        Parameters:
+            df (pd.DataFrame): DataFrame to scale.
+            show_stats (bool): Whether to display descriptive statistics of the scaled data.
+    
         Returns:
-            pd.DataFrame: standardised DataFrame.
+            pd.DataFrame: Scaled DataFrame.
         """
+        if not hasattr(self, 'scaling_params') or not hasattr(self, 'scaling_method'):
+            raise ValueError("Scaling parameters not computed. Run compute_scaling_params first.")
     
-        standardised_df = df.copy()
-        
-        # Loop through columns to standardise, skipping 'LITHOLOGY'
-        for column in standardised_df.columns: # Loop through columns to standardise, skipping 'DEPTH' and 'LITHOLOGY'
-            if column == 'DEPTH':  # Skip the 'DEPTH' column
+        scaled_df = df.copy()
+        method = self.scaling_method
+    
+        for column in scaled_df.columns:
+            if column in ['DEPTH', 'LITHOLOGY']:
                 continue
-            if column == 'LITHOLOGY':  # Skip the 'LITHOLOGY' column
-                continue
-            # Apply standardisation using stored parameters
-            mean_value = self.standardisation_params[column]["mean"]
-            std_value = self.standardisation_params[column]["std"]
-            standardised_df[column] = (standardised_df[column] - mean_value) / (std_value)
-
-        if show_stats: # Show statistics if enabled
-            print("Standardisation Parameters:")
-            for column, params in self.standardisation_params.items():
-                print(f"{column}: mean = {params['mean']}, std = {params['std']}")
-            print("\nDescriptive Statistics of Standardised Data:")
-            print(standardised_df.describe())  # Shows descriptive statistics for the DataFrame
-        
-        return standardised_df
+    
+            if method == 'standard':
+                mean = self.scaling_params[column]['mean']
+                std = self.scaling_params[column]['std']
+                scaled_df[column] = (scaled_df[column] - mean) / std
+    
+            elif method == 'minmax_01':
+                min_val = self.scaling_params[column]['min']
+                max_val = self.scaling_params[column]['max']
+                scaled_df[column] = (scaled_df[column] - min_val) / (max_val - min_val)
+    
+            elif method == 'minmax_11':
+                min_val = self.scaling_params[column]['min']
+                max_val = self.scaling_params[column]['max']
+                scaled_df[column] = 2 * ((scaled_df[column] - min_val) / (max_val - min_val)) - 1
+    
+        if show_stats:
+            print(f"\nScaling Method: {method}")
+            print("Scaling Parameters:")
+            for column, params in self.scaling_params.items():
+                print(f"{column}: {params}")
+            print("\nDescriptive Statistics of Scaled Data:")
+            print(scaled_df.describe())
+    
+        return scaled_df
 
 class KNNClassification():
     
