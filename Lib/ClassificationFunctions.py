@@ -407,9 +407,9 @@ class KNNClassification():
         ax_true = axes[n_logs]
         for top, base, lith in true_blocks:
             lith = lith.lower()
-            if lith in self.lithology_labels:
-                color = self.lithology_labels[lith]['color']
-                hatch = self.lithology_labels[lith]['hatch'] if use_hatch else ''
+            if lith in lithology_labels:
+                color = lithology_labels[lith]['color']
+                hatch = lithology_labels[lith]['hatch'] if use_hatch else ''
                 ax_true.fill_betweenx([top, base], 0, 1, facecolor=color, hatch=hatch, edgecolor='k', alpha=0.6)
     
         ax_true.set_xlabel('True Lithology', fontsize=11)
