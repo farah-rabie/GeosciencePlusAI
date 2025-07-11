@@ -54,6 +54,7 @@ class DataProcessing():
     
             # Get lithology counts for the current well
             lithology_counts = df['LITHOLOGY'].value_counts()
+            total = lithology_counts.sum()
     
             # Update the combined lithology counts
             for lithology, count in lithology_counts.items():
