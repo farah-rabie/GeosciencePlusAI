@@ -3,6 +3,7 @@ import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn.utils import shuffle
+from itertools import groupby
 import matplotlib.patches as mpatches
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.cluster import KMeans
