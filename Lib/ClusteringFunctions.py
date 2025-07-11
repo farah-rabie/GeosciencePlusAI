@@ -487,7 +487,7 @@ class KMeansClustering():
             ax.set_ylim(max(depth), min(depth))
             ax.grid(True)
     
-        fig.subplots_adjust(wspace=0.1)
+        fig.subplots_adjust(wspace=0.1, top=0.9)
         plt.tight_layout()
         plt.show()
 
