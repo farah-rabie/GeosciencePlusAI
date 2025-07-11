@@ -422,7 +422,7 @@ class KNNClassification():
                 hatch = lithology_labels[lith]['hatch'] if use_hatch else ''
                 ax_true.fill_betweenx([top, base], 0, 1, facecolor=color, hatch=hatch, edgecolor='k', alpha=0.6)
     
-        ax_true.set_xlabel('True Lithology', fontsize=11)
+        #ax_true.set_xlabel('True Lithology', fontsize=11)
         ax_true.set_title('True Lithology', fontsize=12)
         ax_true.invert_yaxis()
         ax_true.xaxis.set_ticks_position("top")
@@ -463,7 +463,7 @@ class KNNClassification():
             ax.set_ylim(max(depth), min(depth))  # Invert depth
             ax.grid(True)
     
-        fig.subplots_adjust(wspace=0.5)
+        fig.subplots_adjust(wspace=0.1)
         fig.suptitle('Log Curves with True vs Predicted Lithology', fontsize=14, y=0.93)
         plt.tight_layout()
         plt.show()
