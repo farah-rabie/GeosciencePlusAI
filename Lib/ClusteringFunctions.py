@@ -11,7 +11,7 @@ class DataProcessing():
 
     def __init__(self):
         # Store standardisation parameters (mean, std) for each column
-        self.standardisation_params = {}
+        self.scaling_params = {}
 
     def visualise_lithology_distribution(self, csv_file_paths, display='count'):
         """
