@@ -12,11 +12,9 @@ from sklearn.metrics import accuracy_score
 from sklearn.metrics import confusion_matrix
 
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import RandomizedSearchCV
 from sklearn.metrics import classification_report
 
 from sklearn.svm import SVC
-from sklearn.model_selection import GridSearchCV
 
 class DataProcessing():
 
@@ -314,7 +312,6 @@ class KNNClassification():
         plt.xlabel("Number of Neighbours (k)")
         plt.ylabel("Validation Accuracy")
         plt.title("KNN Hyperparameter Tuning: Accuracy vs k")
-        plt.grid(True)
         plt.show()
     
         # Return the best k, the trained model, and the best accuracy
@@ -346,25 +343,14 @@ class KNNClassification():
     def plot_lithology_comparison(self, test_df, predicted_lithology, use_hatch=True, log_columns=None):
         """
         Visualises true and predicted lithology profiles for a given depth using test data.
-        
+    
         Parameters:
-            test_df (pd.DataFrame): The test DataFrame with 'DEPTH' and 'LITHOLOGY' columns.
-            predicted_lithology (np.array): Predicted lithology labels from the model.
-            use_hatch (bool): Whether to use hatch patterns (can be disabled for speed).
-            log_columns (list or None): Optional list of feature/log column names to plot alongside lithology.
+            test_df (pd.DataFrame): DataFrame with 'DEPTH' and 'LITHOLOGY' columns.
+            predicted_lithology (np.array): Predicted lithology labels.
+            use_hatch (bool): Whether to use hatch patterns.
+            log_columns (list or None): Log column names to plot.
         """
     
-        # Define lithology labels with colors and hatch patterns
-        lithology_labels = {
-            'sandstone': {'color': '#ffff00', 'hatch': '..'},
-            'marl': {'color': '#80ffff', 'hatch': ''}, 
-            'limestone': {'color': '#4682B4', 'hatch': '++'},
-            'coal': {'color': 'black', 'hatch': ''},
-            'silt': {'color': '#7cfc00', 'hatch': '||'},
-            'claystone': {'color': '#228B22', 'hatch': '--'}  
-        }
-    
-        # Extract depth and lithology
         depth = test_df['DEPTH'].values
         true_lithology = test_df['LITHOLOGY'].values
     
@@ -375,7 +361,7 @@ class KNNClassification():
             start = depths[0]
             for i in range(1, len(liths)):
                 if liths[i] != current:
-                    grouped.append((start, depths[i-1], current))
+                    grouped.append((start, depths[i - 1], current))
                     start = depths[i]
                     current = liths[i]
             grouped.append((start, depths[-1], current))
@@ -384,15 +370,21 @@ class KNNClassification():
         true_blocks = group_intervals(depth, true_lithology)
         pred_blocks = group_intervals(depth, predicted_lithology)
     
-        # Plot layout: logs (if any) + true lith + predicted lith
+        # Set up plot layout
         n_logs = len(log_columns) if log_columns else 0
         total_cols = n_logs + 2
-        fig, axes = plt.subplots(nrows=1, ncols=total_cols, figsize=(3.5 * total_cols, 8), sharey=True)
+        fig, axes = plt.subplots(nrows=1, ncols=total_cols, figsize=(3.5 * total_cols, 20), sharey=True)
     
-        # Ensure axes is always iterable
         if total_cols == 1:
             axes = [axes]
-        
+    
+        # --- Color palette for logs 
+        log_colors = [
+            "darkred", "royalblue", "forestgreen", "orange", "mediumpurple",
+            "teal", "crimson", "slategray", "black"
+        ]
+        color_cycle = iter(log_colors)
+    
         # --- Plot logs ---
         for i in range(n_logs):
             log_name = log_columns[i]
@@ -400,24 +392,32 @@ class KNNClassification():
             if log_name not in test_df.columns:
                 print(f"Warning: {log_name} not found in DataFrame.")
                 continue
-            ax.plot(test_df[log_name], test_df['DEPTH'], lw=2.0, color='darkorange')
+            color = next(color_cycle)
+            ax.plot(test_df[log_name], test_df['DEPTH'], lw=2.0, color=color)
             ax.set_xlabel(log_name, fontsize=11)
             ax.set_title(f'{log_name} Log', fontsize=12)
             ax.invert_yaxis()
-            ax.grid(True)
+            ax.xaxis.set_ticks_position("top")
+            ax.xaxis.set_label_position("top")
+            if i != 0:
+                ax.tick_params(labelleft=False)
+            ax.tick_params(labelbottom=False)  # Remove bottom x-labels
     
         # --- True Lithology ---
         ax_true = axes[n_logs]
         for top, base, lith in true_blocks:
             lith = lith.lower()
-            if lith in lithology_labels:
-                color = lithology_labels[lith]['color']
-                hatch = lithology_labels[lith]['hatch'] if use_hatch else ''
+            if lith in self.lithology_labels:
+                color = self.lithology_labels[lith]['color']
+                hatch = self.lithology_labels[lith]['hatch'] if use_hatch else ''
                 ax_true.fill_betweenx([top, base], 0, 1, facecolor=color, hatch=hatch, edgecolor='k', alpha=0.6)
     
         ax_true.set_xlabel('True Lithology', fontsize=11)
         ax_true.set_title('True Lithology', fontsize=12)
         ax_true.invert_yaxis()
+        ax_true.xaxis.set_ticks_position("top")
+        ax_true.xaxis.set_label_position("top")
+        ax_true.tick_params(labelleft=False, labelbottom=False)
     
         # --- Predicted Lithology ---
         ax_pred = axes[n_logs + 1]
@@ -430,29 +430,34 @@ class KNNClassification():
     
         ax_pred.set_xlabel('Predicted Lithology', fontsize=11)
         ax_pred.set_title('Predicted Lithology', fontsize=12)
+        ax_pred.invert_yaxis()
+        ax_pred.xaxis.set_ticks_position("top")
+        ax_pred.xaxis.set_label_position("top")
+        ax_pred.tick_params(labelleft=False, labelbottom=False)
     
-        # --- Legend from self.lithology_labels ---
+        # --- Legend ---
         handles = [
-            mpatches.Patch(facecolor=props['color'],
-                           hatch=props['hatch'] if use_hatch else '',
-                           edgecolor='k', label=lith)
+            mpatches.Patch(
+                facecolor=props['color'],
+                hatch=props['hatch'] if use_hatch else '',
+                edgecolor='k',
+                label=lith
+            )
             for lith, props in self.lithology_labels.items()
         ]
         ax_true.legend(handles=handles, loc='upper center', bbox_to_anchor=(0.5, 1.15),
                        ncol=len(handles), fontsize=10, fancybox=True)
     
-        # Format all axes
-        for i, ax in enumerate(axes):
-            ax.set_ylim(max(depth), min(depth))
-            ax.xaxis.set_ticks_position("top")
-            ax.xaxis.set_label_position("top")
-            if i != 0:
-                ax.tick_params(labelleft=False)
+        # Apply consistent y-limits
+        for ax in axes:
+            ax.set_ylim(max(depth), min(depth))  # Invert depth
+            ax.grid(True)
     
         fig.subplots_adjust(wspace=0.5)
         fig.suptitle('Log Curves with True vs Predicted Lithology', fontsize=14, y=0.93)
         plt.tight_layout()
         plt.show()
+
 
     def plot_confusion_matrix(self, y_test, y_pred):
         
