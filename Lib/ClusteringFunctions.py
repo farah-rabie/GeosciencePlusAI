@@ -13,8 +13,8 @@ class DataProcessing():
         # Store standardisation parameters (mean, std) for each column
         self.standardisation_params = {}
 
-def visualise_lithology_distribution(self, csv_file_paths, display='count'):
-        """
+    def visualise_lithology_distribution(self, csv_file_paths, display='count'):
+            """
         Visualises the combined lithology distribution for multiple wells across multiple CSV files in a single plot.
 
         Parameters:
