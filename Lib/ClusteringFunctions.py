@@ -14,7 +14,7 @@ class DataProcessing():
         self.standardisation_params = {}
 
     def visualise_lithology_distribution(self, csv_file_paths, display='count'):
-            """
+        """
         Visualises the combined lithology distribution for multiple wells across multiple CSV files in a single plot.
 
         Parameters:
@@ -41,43 +41,43 @@ class DataProcessing():
             for lithology, count in lithology_counts.items():
                 combined_lithology_counts[lithology] = combined_lithology_counts.get(lithology, 0) + count
 
-            # Total count across all lithologies
-            total = sum(combined_lithology_counts.values())
-    
-            # Dictionary of lithology properties (color, hatch symbol)
-            lithology_dict = self.lithology_labels
-    
-            # Create the plot
-            fig, ax = plt.subplots(figsize=(10, 8))
-    
-            for lithology, count in combined_lithology_counts.items():
-                color = lithology_dict.get(lithology, {}).get('color', '#D2B48C')  # Default tan color
-                hatch = lithology_dict.get(lithology, {}).get('hatch', '')
-    
-                # Draw bar
-                bar = ax.bar(lithology, count, color=color, hatch=hatch)
-    
-                # Correct percentage for this lithology
-                percent = (count / total) * 100
-    
-                # Label above bar
-                if display == 'count':
-                    label = str(int(count))
-                elif display == 'percentage':
-                    label = f"{percent:.1f}%"
-                elif display == 'both':
-                    label = f"{int(count)}\n({percent:.1f}%)"
-                else:
-                    label = ''
-    
-                ax.text(bar[0].get_x() + bar[0].get_width() / 2, bar[0].get_height(), label,
-                        ha='center', va='bottom', fontsize=10)
-    
-            ax.set_ylabel('Count', fontsize=12)
-            ax.set_title('Combined Lithology Distribution Across Wells', fontsize=14)
-            plt.xticks(rotation=45)
-            plt.tight_layout()
-            plt.show()
+        # Total count across all lithologies
+        total = sum(combined_lithology_counts.values())
+
+        # Dictionary of lithology properties (color, hatch symbol)
+        lithology_dict = self.lithology_labels
+
+        # Create the plot
+        fig, ax = plt.subplots(figsize=(10, 8))
+
+        for lithology, count in combined_lithology_counts.items():
+            color = lithology_dict.get(lithology, {}).get('color', '#D2B48C')  # Default tan color
+            hatch = lithology_dict.get(lithology, {}).get('hatch', '')
+
+            # Draw bar
+            bar = ax.bar(lithology, count, color=color, hatch=hatch)
+
+            # Correct percentage for this lithology
+            percent = (count / total) * 100
+
+            # Label above bar
+            if display == 'count':
+                label = str(int(count))
+            elif display == 'percentage':
+                label = f"{percent:.1f}%"
+            elif display == 'both':
+                label = f"{int(count)}\n({percent:.1f}%)"
+            else:
+                label = ''
+
+            ax.text(bar[0].get_x() + bar[0].get_width() / 2, bar[0].get_height(), label,
+                    ha='center', va='bottom', fontsize=10)
+
+        ax.set_ylabel('Count', fontsize=12)
+        ax.set_title('Combined Lithology Distribution Across Wells', fontsize=14)
+        plt.xticks(rotation=45)
+        plt.tight_layout()
+        plt.show()
 
     def process_well_data(self, file_paths, selected_columns, method='standard', train_data=False, val_data=False, show_stats=False, show_rows=False):
         
@@ -230,7 +230,6 @@ class DataProcessing():
                 print(f"{column}: {clean_params}")
     
         return scaled_df
-
     def compare_distributions(self, pre_standardised_data, standardised_data, column, title="Feature Distribution Comparison"):
         
         """
