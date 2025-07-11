@@ -463,9 +463,8 @@ class KNNClassification():
             ax.set_ylim(max(depth), min(depth))  # Invert depth
             ax.grid(True)
     
-        fig.subplots_adjust(wspace=0.1)
+        fig.subplots_adjust(wspace=0.05, left=0.05, right=0.98, top=0.90, bottom=0.05)
         fig.suptitle('Log Curves with True vs Predicted Lithology', fontsize=14, y=0.93)
-        plt.tight_layout()
         plt.show()
 
 
