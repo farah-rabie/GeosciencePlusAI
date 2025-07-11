@@ -20,8 +20,8 @@ from sklearn.model_selection import GridSearchCV
 class DataProcessing():
 
     def __init__(self):
-        # Store standardisation parameters (mean, std) for each column
-        self.standardisation_params = {}
+        # Store scaling parameters (mean, std) for each column
+        self.scaling_params = {}
         self.lithology_labels = {
             'Sandstone': {'color': '#ffff00', 'hatch': '..'},
             'Marl': {'color': '#80ffff', 'hatch': ''}, 
@@ -143,7 +143,7 @@ class DataProcessing():
         if train_data: # if train_data is True
             combined_df = pd.concat(combined_data, ignore_index=True) 
             columns_to_standardise = [col for col in combined_df.columns if col != 'LITHOLOGY'] # Exclude 'LITHOLOGY' from standardisation 
-            self.compute_standardisation_params(combined_df[columns_to_standardise])  # compute standardisation parameters on selected columns only
+            self.compute_scaling_params(combined_df[columns_to_standardise])  # compute scaling parameters on selected columns only
             if show_stats: # Show statistics if enabled
                 print("\nDescriptive Statistics of Data:")
                 print(combined_df.describe())  # Shows descriptive statistics for the DataFrame
