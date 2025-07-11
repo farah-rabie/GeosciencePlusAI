@@ -62,7 +62,7 @@ class DataProcessing():
         total = sum(combined_lithology_counts.values())
 
         # Dictionary of lithology properties (color, hatch symbol)
-        lithology_dict = lithology_labels
+        lithology_dict = self.lithology_labels
 
         # Create the plot
         fig, ax = plt.subplots(figsize=(10, 8))
