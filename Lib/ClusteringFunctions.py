@@ -400,15 +400,12 @@ class KMeansClustering():
             log_columns (list): Optional list of log column names to plot.
         """
     
-        # Sort and extract data
+        # Sort and extract required columns
         clustered_data = clustered_data.sort_values(by='DEPTH')
-        clustered_data['LITHOLOGY'] = clustered_data['LITHOLOGY'].str.lower()  # Normalize labels
-    
         depth = clustered_data['DEPTH'].values
-        lithology = clustered_data['LITHOLOGY'].values
+        lithology = clustered_data['LITHOLOGY'].str.lower().values
         cluster_column = clustered_data['Cluster'].values
     
-        # Lithology color/hatch map
         lithology_labels = {
             'sandstone': {'color': '#ffff00', 'hatch': '..'},
             'marl': {'color': '#80ffff', 'hatch': ''}, 
@@ -418,7 +415,6 @@ class KMeansClustering():
             'claystone': {'color': '#228B22', 'hatch': '--'}  
         }
     
-        # Cluster color map
         cluster_labels = {
             0: {'color': '#FF6347'}, 1: {'color': '#32CD32'}, 2: {'color': '#1E90FF'},
             3: {'color': '#FFC0CB'}, 4: {'color': '#FFD700'}, 5: {'color': '#8A2BE2'},
@@ -426,85 +422,72 @@ class KMeansClustering():
             9: {'color': '#FF4500'}
         }
     
-        # Log colors
-        log_colors = [
-            "darkred", "royalblue", "forestgreen", "orange", "mediumpurple",
-            "teal", "crimson", "slategray", "black"
-        ]
-    
+        # Plot setup
         n_logs = len(log_columns) if log_columns else 0
-        total_cols = n_logs + 2  # Logs + Lithology + Clusters
+        total_cols = n_logs + 2  # logs + lithology + clusters
     
-        fig, axes = plt.subplots(nrows=1, ncols=total_cols, figsize=(3.5 * total_cols, 10), sharey=True)
+        fig, axes = plt.subplots(1, total_cols, figsize=(3 * total_cols, 10), sharey=True)
+    
         if total_cols == 1:
-            axes = [axes]
+            axes = [axes]  # Ensure axes is iterable
     
-        # --- Plot logs ---
+        # --- Plot log tracks ---
         if log_columns:
-            for i, log_name in enumerate(log_columns):
+            log_colors = ['darkred', 'royalblue', 'forestgreen', 'orange', 'purple', 'black']
+            for i, log in enumerate(log_columns):
                 ax = axes[i]
-                if log_name not in clustered_data.columns:
-                    print(f"Warning: Log column '{log_name}' not found.")
-                    continue
-                color = log_colors[i % len(log_colors)]
-                ax.plot(clustered_data[log_name], depth, color=color, lw=2)
-                ax.set_xlabel(log_name, fontsize=12)
-                ax.invert_yaxis()
-                ax.xaxis.set_ticks_position('bottom')
-                ax.xaxis.set_label_position('bottom')
-                if i != 0:
-                    ax.tick_params(labelleft=False)
-                ax.grid(True)
+                if log in clustered_data.columns:
+                    ax.plot(clustered_data[log], depth, color=log_colors[i % len(log_colors)], lw=1.5)
+                    ax.set_xlabel(log, fontsize=10)
+                    ax.invert_yaxis()
+                    ax.grid(True)
+                    if i != 0:
+                        ax.tick_params(labelleft=False)
+                else:
+                    ax.set_visible(False)
+                    print(f"Log column '{log}' not found in the dataframe.")
     
-        # --- Plot Lithology ---
+        # --- Lithology plot ---
         ax_lith = axes[n_logs]
         for j in range(len(depth) - 1):
             lith = lithology[j]
             if lith in lithology_labels:
                 props = lithology_labels[lith]
-                ax_lith.fill_betweenx(
-                    [depth[j], depth[j + 1]], 0, 10, 
-                    facecolor=props['color'], hatch=props['hatch'], alpha=0.6, edgecolor='k'
-                )
-        ax_lith.set_xlim(0, 10)
-        ax_lith.set_xlabel('Lithology', fontsize=12)
-        ax_lith.set_title('Lithology Profile', fontsize=14)
+                ax_lith.fill_betweenx([depth[j], depth[j + 1]], 0, 1, facecolor=props['color'],
+                                      hatch=props['hatch'], alpha=0.6, edgecolor='k')
+        ax_lith.set_xlim(0, 1)
+        ax_lith.set_xlabel('Lithology', fontsize=10)
+        ax_lith.set_title('Lithology', fontsize=12)
         ax_lith.invert_yaxis()
-    
         lith_handles = [
             mpatches.Patch(facecolor=props['color'], hatch=props['hatch'], edgecolor='k', label=label)
             for label, props in lithology_labels.items()
         ]
-        ax_lith.legend(handles=lith_handles, loc='upper center', bbox_to_anchor=(0.5, 1.15), ncol=len(lith_handles), fontsize=10)
+        ax_lith.legend(handles=lith_handles, loc='upper center', bbox_to_anchor=(0.5, 1.05), fontsize=8, ncol=2)
     
-        # --- Plot Clusters ---
+        # --- Cluster plot ---
         ax_cluster = axes[n_logs + 1]
         for j in range(len(depth) - 1):
             cluster = cluster_column[j]
             if cluster in cluster_labels:
-                ax_cluster.fill_betweenx(
-                    [depth[j], depth[j + 1]], 0, 10, 
-                    facecolor=cluster_labels[cluster]['color'], alpha=0.6, edgecolor='k'
-                )
-        ax_cluster.set_xlim(0, 10)
-        ax_cluster.set_xlabel('Clusters', fontsize=12)
-        ax_cluster.set_title('Cluster Profile', fontsize=14)
+                color = cluster_labels[cluster]['color']
+                ax_cluster.fill_betweenx([depth[j], depth[j + 1]], 0, 1, facecolor=color, alpha=0.6, edgecolor='k')
+        ax_cluster.set_xlim(0, 1)
+        ax_cluster.set_xlabel('Cluster', fontsize=10)
+        ax_cluster.set_title('Cluster Profile', fontsize=12)
         ax_cluster.invert_yaxis()
-    
-        cluster_in_data = sorted(set(cluster_column) & set(cluster_labels.keys()))
         cluster_handles = [
             mpatches.Patch(facecolor=cluster_labels[c]['color'], edgecolor='k', label=f'Cluster {c}')
-            for c in cluster_in_data
+            for c in sorted(set(cluster_column) & set(cluster_labels.keys()))
         ]
-        ax_cluster.legend(handles=cluster_handles, loc='upper center', bbox_to_anchor=(0.5, 1.15), ncol=len(cluster_handles), fontsize=10)
+        ax_cluster.legend(handles=cluster_handles, loc='upper center', bbox_to_anchor=(0.5, 1.05), fontsize=8, ncol=3)
     
-        # --- Final formatting ---
+        # Final formatting
         for ax in axes:
             ax.set_ylim(max(depth), min(depth))
             ax.grid(True)
     
         fig.subplots_adjust(wspace=0.4)
-        fig.suptitle('Lithology, Clusters and Logs by Depth', fontsize=16, y=1.05)
         plt.tight_layout()
         plt.show()
 
