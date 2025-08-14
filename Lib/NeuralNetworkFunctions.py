@@ -235,6 +235,27 @@ class DataProcessing():
     
         return scaled_df
 
+    def shuffle_data(self, X, y, random_state=None):
+        """
+        Shuffle features and labels in unison.
+    
+        Parameters:
+            X (np.ndarray or pd.DataFrame): Feature data.
+            y (np.ndarray or pd.Series): Labels/target data.
+            random_state (int, optional): Seed for reproducibility.
+    
+        Returns:
+            X_shuffled, y_shuffled: Shuffled versions of X and y.
+        """
+        if random_state is not None:
+            np.random.seed(random_state)
+            
+        permutation = np.random.permutation(len(X))
+        X_shuffled = X[permutation]
+        y_shuffled = y[permutation]
+        
+        return X_shuffled, y_shuffled
+
 class FeedforwardNeuralNetwork(tf.keras.Model):
     '''
     FeedForward Artificial Neural Networks
