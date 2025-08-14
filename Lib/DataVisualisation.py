@@ -116,7 +116,7 @@ class VisualiseWellData():
             print(f"  Min: {min_val}")
             print(f"  Max: {max_val}")
 
-def crossplot_2D(csv_file_path=None, x_data=None, y_data=None, color_data=None, well_name="Well", x_col=None, y_col=None, x_label=None, y_label=None, x_in_log=False, y_in_log=False, filter_lithology=None):
+    def crossplot_2D(csv_file_path=None, x_data=None, y_data=None, color_data=None, well_name="Well", x_col=None, y_col=None, x_label=None, y_label=None, x_in_log=False, y_in_log=False, filter_lithology=None):
         """
         Create a 2D crossplot with optional lithology coloring and filtering.
         
