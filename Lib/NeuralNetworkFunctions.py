@@ -399,7 +399,7 @@ class FeedforwardNeuralNetwork(tf.keras.Model):
         self.NN_Feedforward.compile(optimizer=optimizer, loss=loss_dict)
 
     def train(self, x_train, y_train, epochs, batch_size, verbose,
-              validation_split=0.2, x_val=None, y_val=None, use_multiprocessing=True):
+              validation_split=0.2, x_val=None, y_val=None):
         """
         Train the Feedforward NN model.
     
