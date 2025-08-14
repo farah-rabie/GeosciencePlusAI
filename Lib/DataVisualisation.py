@@ -116,41 +116,46 @@ class VisualiseWellData():
             print(f"  Min: {min_val}")
             print(f"  Max: {max_val}")
 
-    def crossplot_2D(self, csv_file_path, well_name, x_col, y_col, x_in_log=False, y_in_log=False, color_col=None):
+    def crossplot_2D(self, csv_file_path, well_name, x_col, y_col, x_in_log=False, y_in_log=False, color_col=None, filter_lithology=None):
+        
         # Load the CSV file into a DataFrame
         df = pd.read_csv(csv_file_path)
-
+    
+        # Filter by lithology if requested
+        if filter_lithology and color_col:
+            df = df[df[color_col] == filter_lithology]
+    
         # Check if the selected columns exist
         for col in [x_col, y_col, color_col] if color_col else [x_col, y_col]:
             if col not in df.columns:
                 print(f"Column '{col}' not found in the CSV file.")
                 return
-
+    
         # Handle negative values for the selected columns
         for col in [x_col, y_col]:
             if (df[col] < 0).any():
                 negative_count = (df[col] < 0).sum()
                 df[col] = df[col].clip(lower=0)
                 print(f"{negative_count} negative values in '{col}' have been clipped to 0.")
-
+    
         # Drop rows with NaN in required columns
         drop_cols = [x_col, y_col] + ([color_col] if color_col else [])
         df = df.dropna(subset=drop_cols)
-
+    
         # Extract data for regression
         x_data = df[x_col].values.reshape(-1, 1)
         y_data = df[y_col].values
-
+    
         # Fit linear regression model
         model = LinearRegression()
         model.fit(x_data, y_data)
         y_pred = model.predict(x_data)
-
+    
         # Create plot
         fig, ax = plt.subplots(figsize=(10, 6))
-
+    
         # Plot scatter with lithology-based coloring
-        if color_col:
+        if color_col and not filter_lithology:
             unique_liths = df[color_col].unique()
             for lith in unique_liths:
                 mask = df[color_col] == lith
@@ -158,32 +163,34 @@ class VisualiseWellData():
                            label=str(lith), alpha=0.6)
         else:
             ax.scatter(x_data, y_data, label='Data points', color='blue', alpha=0.5)
-
+    
         # Plot regression line
         ax.plot(x_data, y_pred, color='red', linewidth=2, label='Linear fit')
-
+    
         # Set log scales if needed
         if x_in_log:
             ax.set_xscale("log")
         if y_in_log:
             ax.set_yscale("log")
-
+    
         # Add labels and title
         ax.set_xlabel(x_col, fontsize=10)
         ax.set_ylabel(y_col, fontsize=10)
-        ax.set_title(f'{x_col} vs {y_col} for Well {well_name}', fontsize=12)
+        title_suffix = f" ({filter_lithology})" if filter_lithology else ""
+        ax.set_title(f'{x_col} vs {y_col} for Well {well_name}{title_suffix}', fontsize=12)
         ax.legend(title=color_col if color_col else "Legend")
-
+    
         plt.tight_layout()
         plt.show()
 
         # Example usage:
-        # visualiser.crossplot_2D(csv_file_path='.\Well Data\15_9-F-4.csv',
-        # well_name='well_name',
-        # x_col='NPHI',
-        # y_col='RHOB',
-        # x_in_log=False,
-        # color_col='LITHOLOGY'
+        # visualiser.crossplot_2D(
+        #    well_data_path,
+        #    well_name,
+        #    x_col='RHOB',
+        #    y_col='NPHI',
+        #    color_col='LITHOLOGY',
+        #    filter_lithology='Sandstone'
         #)
 
     def plot_well_logs_and_lithology(self, csv_file_path, well_name):
