@@ -97,83 +97,69 @@ class DataProcessing():
         plt.tight_layout()
         plt.show()
 
-    def process_well_data(self, file_paths, selected_columns, method='standard', train_data=False, val_data=False, show_stats=False, show_rows=False):
-        
-        """
-        Combines and processes data from multiple CSV files.
-        
-        Parameters:
-            file_paths (list): List of file paths for the CSV files.
-            selected_columns (list): List of columns to extract and process.
-            train_data (bool): If True, combines all data into a single DataFrame + computes and stores scaling parameters.
-            val_data (bool): If True, combines all data into a single DataFrame.
-                             If neither train_data nor val_data are True >> False >> keeps the data for each file separate.
-            show_stats (bool): Whether to display descriptive statistics of the processed data.
-            show_rows (bool): Whether to display the first few rows of the processed data.
-    
-        Returns:
-            pd.DataFrame or list of pd.DataFrame: Processed DataFrame(s), either combined or separate for each file.
-        """
+    def process_well_data(self, file_paths, selected_columns, method='standard', train_data=False, val_data=False, show_stats=False, show_rows=False, filter_lithology=None):
         
         combined_data = []
         individual_dataframes = []
     
         for file in file_paths:
-            df = pd.read_csv(file) # Load the data
-            df = df[selected_columns] # Select relevant columns
-            df.dropna(inplace=True) # Handle missing data: drop rows with missing values 
-            
-            numeric_columns = [col for col in selected_columns if col != 'DEPTH'] # exclude 'LITHOLOGY' from selected columns
-            numeric_columns = [col for col in numeric_columns if col != 'LITHOLOGY'] # exclude 'LITHOLOGY' from numerical columns
-            df = df[(df[numeric_columns] >= 0).all(axis=1)] # Remove negative values
-            
+            df = pd.read_csv(file)  # Load the data
+            df = df[selected_columns]  # Select relevant columns
+            df.dropna(inplace=True)  # Drop missing values
+    
+            # --- New: filter by lithology if requested ---
+            if filter_lithology and 'LITHOLOGY' in df.columns:
+                df = df[df['LITHOLOGY'] == filter_lithology]
+    
+            numeric_columns = [col for col in selected_columns if col not in ['DEPTH', 'LITHOLOGY']]
+            df = df[(df[numeric_columns] >= 0).all(axis=1)]  # Remove negative values
+    
             # Compute logarithms for 'KLOGH' and 'RT' if necessary
             if 'KLOGH' in df.columns:
-                df['log_KLOGH'] = np.log1p(df['KLOGH'])  # log(1 + x) for stability
-                df.drop(columns=['KLOGH'], inplace=True)  # Remove the original 'KLOGH' column
+                df['log_KLOGH'] = np.log1p(df['KLOGH'])
+                df.drop(columns=['KLOGH'], inplace=True)
             if 'RT' in df.columns:
                 df['log_RT'] = np.log1p(df['RT'])
-                df.drop(columns=['RT'], inplace=True)  # Remove the original 'RT' column
+                df.drop(columns=['RT'], inplace=True)
             if 'GR' in df.columns:
                 df = df[df['GR'] <= 150]
-        
-            individual_dataframes.append(df) # Append the processed DataFrame to the list of individual DataFrames
-            combined_data.append(df)  # Add to the combined data list for further merging
     
-        if train_data: # if train_data is True
-            combined_df = pd.concat(combined_data, ignore_index=True) 
-            columns_to_scale = [col for col in combined_df.columns if col != 'LITHOLOGY'] # Exclude 'LITHOLOGY' from scaling 
-            self.compute_scaling_params(combined_df[columns_to_scale], method=method)  # compute scaling parameters on selected columns only
-            if show_stats: # Show statistics if enabled
+            individual_dataframes.append(df)
+            combined_data.append(df)
+    
+        if train_data:
+            combined_df = pd.concat(combined_data, ignore_index=True)
+            columns_to_scale = [col for col in combined_df.columns if col != 'LITHOLOGY']
+            self.compute_scaling_params(combined_df[columns_to_scale], method=method)
+            if show_stats:
                 print("\nDescriptive Statistics of Data:")
-                print(combined_df.describe())  # Shows descriptive statistics for the DataFrame
-            if show_rows: # Show first few rows if enabled
+                print(combined_df.describe())
+            if show_rows:
                 print("\nFirst Few Rows of Data:")
-                print(combined_df.head())  # Shows the first few rows of the DataFrame
+                print(combined_df.head())
             combined_df = shuffle(combined_df, random_state=42)
-            return combined_df  # Return the combined DataFrame
-            
+            return combined_df
+    
         elif val_data:
-            combined_df = pd.concat(combined_data, ignore_index=True) 
-            if show_stats: # Show statistics if enabled
+            combined_df = pd.concat(combined_data, ignore_index=True)
+            if show_stats:
                 print("\nDescriptive Statistics of Data:")
-                print(combined_df.describe())  # Shows descriptive statistics for the DataFrame
-            if show_rows: # Show first few rows if enabled
+                print(combined_df.describe())
+            if show_rows:
                 print("\nFirst Few Rows of Data:")
-                print(combined_df.head())  # Shows the first few rows of the DataFrame
+                print(combined_df.head())
             combined_df = shuffle(combined_df, random_state=42)
-            return combined_df  # Return the combined DataFrame
-            
+            return combined_df
+    
         else:
             for idx, df in enumerate(individual_dataframes):
                 if show_stats:
                     print(f"\nDescriptive Statistics of DataFrame {idx + 1}:")
-                    print(df.describe())  # Shows descriptive statistics for each individual DataFrame
-                
+                    print(df.describe())
                 if show_rows:
                     print(f"\nFirst Few Rows of DataFrame {idx + 1}:")
-                    print(df.head())  # Shows the first few rows of each individual DataFrame
-            return individual_dataframes  # Return the list of individual DataFrames
+                    print(df.head())
+            return individual_dataframes
 
     def compute_scaling_params(self, df, method='standard'):
         """
