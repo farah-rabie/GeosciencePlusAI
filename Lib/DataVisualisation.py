@@ -116,70 +116,84 @@ class VisualiseWellData():
             print(f"  Min: {min_val}")
             print(f"  Max: {max_val}")
 
-    def crossplot_2D(self, csv_file_path, well_name, x_col, y_col, x_in_log=False, y_in_log=False, color_col=None, filter_lithology=None):
+def crossplot_2D(csv_file_path=None, x_data=None, y_data=None, color_data=None, well_name="Well", x_col=None, y_col=None, x_label=None, y_label=None, x_in_log=False, y_in_log=False, filter_lithology=None):
+        """
+        Create a 2D crossplot with optional lithology coloring and filtering.
         
-        # Load the CSV file into a DataFrame
-        df = pd.read_csv(csv_file_path)
-    
-        # Filter by lithology if requested
-        if filter_lithology and color_col:
-            df = df[df[color_col] == filter_lithology]
-    
-        # Check if the selected columns exist
-        for col in [x_col, y_col, color_col] if color_col else [x_col, y_col]:
-            if col not in df.columns:
-                print(f"Column '{col}' not found in the CSV file.")
-                return
-    
-        # Handle negative values for the selected columns
-        for col in [x_col, y_col]:
-            if (df[col] < 0).any():
-                negative_count = (df[col] < 0).sum()
-                df[col] = df[col].clip(lower=0)
-                print(f"{negative_count} negative values in '{col}' have been clipped to 0.")
-    
-        # Drop rows with NaN in required columns
-        drop_cols = [x_col, y_col] + ([color_col] if color_col else [])
-        df = df.dropna(subset=drop_cols)
-    
-        # Extract data for regression
-        x_data = df[x_col].values.reshape(-1, 1)
-        y_data = df[y_col].values
-    
-        # Fit linear regression model
+        Parameters:
+            csv_file_path (str, optional): Path to CSV file. If provided, x_data and y_data are ignored.
+            x_data, y_data (np.ndarray or pd.Series, optional): Data arrays for X and Y axes.
+            color_data (np.ndarray, pd.Series, or column name if csv_file_path is used): Lithology data.
+            well_name (str): Well name for title.
+            x_col, y_col (str, optional): Column names if using csv_file_path.
+            x_label, y_label (str, optional): Labels for axes.
+            x_in_log, y_in_log (bool): Apply log scale on X or Y.
+            filter_lithology (str, optional): If set, only plot points of this lithology.
+        """
+        
+        # Load data from CSV if path is provided
+        if csv_file_path:
+            df = pd.read_csv(csv_file_path)
+            
+            # Check columns
+            for col in [x_col, y_col] + ([color_data] if color_data else []):
+                if col not in df.columns:
+                    print(f"Column '{col}' not found in CSV.")
+                    return
+            
+            x_data = df[x_col].values.reshape(-1, 1)
+            y_data = df[y_col].values
+            if color_data:
+                color_data_arr = df[color_data].values
+            else:
+                color_data_arr = None
+        else:
+            # Use arrays directly
+            x_data = np.array(x_data).reshape(-1, 1)
+            y_data = np.array(y_data)
+            color_data_arr = np.array(color_data) if color_data is not None else None
+        
+        # Apply lithology filter
+        if filter_lithology and color_data_arr is not None:
+            mask = color_data_arr == filter_lithology
+            x_data = x_data[mask]
+            y_data = y_data[mask]
+            color_data_arr = color_data_arr[mask] if color_data_arr is not None else None
+        
+        # Handle negatives
+        x_data = np.clip(x_data, 0, None)
+        y_data = np.clip(y_data, 0, None)
+        
+        # Fit regression
         model = LinearRegression()
         model.fit(x_data, y_data)
         y_pred = model.predict(x_data)
-    
-        # Create plot
+        
+        # Plot
         fig, ax = plt.subplots(figsize=(10, 6))
-    
-        # Plot scatter with lithology-based coloring
-        if color_col and not filter_lithology:
-            unique_liths = df[color_col].unique()
+        
+        if color_data_arr is not None and not filter_lithology:
+            unique_liths = np.unique(color_data_arr)
             for lith in unique_liths:
-                mask = df[color_col] == lith
-                ax.scatter(df.loc[mask, x_col], df.loc[mask, y_col], 
-                           label=str(lith), alpha=0.6)
+                mask = color_data_arr == lith
+                ax.scatter(x_data[mask], y_data[mask], label=str(lith), alpha=0.6)
         else:
-            ax.scatter(x_data, y_data, label='Data points', color='blue', alpha=0.5)
-    
-        # Plot regression line
+            ax.scatter(x_data, y_data, label="Data points", color="blue", alpha=0.5)
+        
         ax.plot(x_data, y_pred, color='red', linewidth=2, label='Linear fit')
-    
-        # Set log scales if needed
+        
         if x_in_log:
             ax.set_xscale("log")
         if y_in_log:
             ax.set_yscale("log")
-    
-        # Add labels and title
-        ax.set_xlabel(x_col, fontsize=10)
-        ax.set_ylabel(y_col, fontsize=10)
+        
+        ax.set_xlabel(x_label if x_label else (x_col if x_col else "X"), fontsize=10)
+        ax.set_ylabel(y_label if y_label else (y_col if y_col else "Y"), fontsize=10)
+        
         title_suffix = f" ({filter_lithology})" if filter_lithology else ""
-        ax.set_title(f'{x_col} vs {y_col} for Well {well_name}{title_suffix}', fontsize=12)
-        ax.legend(title=color_col if color_col else "Legend")
-    
+        ax.set_title(f'{ax.get_xlabel()} vs {ax.get_ylabel()} for {well_name}{title_suffix}', fontsize=12)
+        
+        ax.legend(title=color_data if csv_file_path else "Lithology")
         plt.tight_layout()
         plt.show()
 
