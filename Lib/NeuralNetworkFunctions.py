@@ -430,7 +430,6 @@ class FeedforwardNeuralNetwork(tf.keras.Model):
             epochs=epochs,
             batch_size=batch_size,
             verbose=verbose,
-            use_multiprocessing=use_multiprocessing,
             callbacks=[callback, early_stopping],
             **validation_arg
         )
