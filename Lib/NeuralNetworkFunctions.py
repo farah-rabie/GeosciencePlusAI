@@ -457,3 +457,26 @@ class FeedforwardNeuralNetwork(tf.keras.Model):
     
         print("Number of epochs when early stopping triggered:", early_stopping.stopped_epoch)
         return hist_NNnet
+                  
+    def plot_training_loss(self, history):
+        """
+        Plot training and validation loss from a Keras History object.
+    
+        Args:
+            history: History object returned by model.fit()
+        """
+        import matplotlib.pyplot as plt
+    
+        if not hasattr(history, "history"):
+            raise ValueError("The provided object is not a valid Keras History object.")
+    
+        plt.figure(figsize=(8, 5))
+        plt.plot(history.history['loss'], label='Training Loss')
+        if 'val_loss' in history.history:
+            plt.plot(history.history['val_loss'], label='Validation Loss', linestyle='--')
+        plt.xlabel('Epoch')
+        plt.ylabel('Loss')
+        plt.title('Training vs Validation Loss')
+        plt.legend()
+        plt.grid(True)
+        plt.show()
