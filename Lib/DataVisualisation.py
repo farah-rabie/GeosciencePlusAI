@@ -116,87 +116,64 @@ class VisualiseWellData():
             print(f"  Min: {min_val}")
             print(f"  Max: {max_val}")
 
-    def crossplot_2D(csv_file_path=None, x_data=None, y_data=None, color_data=None, well_name="Well", x_col=None, y_col=None, x_label=None, y_label=None, x_in_log=False, y_in_log=False, filter_lithology=None):
-        """
-        Create a 2D crossplot with optional lithology coloring and filtering.
-        
-        Parameters:
-            csv_file_path (str, optional): Path to CSV file. If provided, x_data and y_data are ignored.
-            x_data, y_data (np.ndarray or pd.Series, optional): Data arrays for X and Y axes.
-            color_data (np.ndarray, pd.Series, or column name if csv_file_path is used): Lithology data.
-            well_name (str): Well name for title.
-            x_col, y_col (str, optional): Column names if using csv_file_path.
-            x_label, y_label (str, optional): Labels for axes.
-            x_in_log, y_in_log (bool): Apply log scale on X or Y.
-            filter_lithology (str, optional): If set, only plot points of this lithology.
-        """
-        
-        # Load data from CSV if path is provided
+    def crossplot_2D(self, well_name, 
+                  x_col=None, y_col=None, csv_file_path=None,
+                  x_data=None, y_data=None, color_data=None,
+                  x_in_log=False, y_in_log=False, filter_lithology=None):
+    
+        # Load CSV if path is provided
         if csv_file_path:
             df = pd.read_csv(csv_file_path)
             
-            # Check columns
-            for col in [x_col, y_col] + ([color_data] if color_data else []):
-                if col not in df.columns:
-                    print(f"Column '{col}' not found in CSV.")
-                    return
-            
-            x_data = df[x_col].values.reshape(-1, 1)
-            y_data = df[y_col].values
-            if color_data:
-                color_data_arr = df[color_data].values
-            else:
-                color_data_arr = None
-        else:
-            # Use arrays directly
-            x_data = np.array(x_data).reshape(-1, 1)
-            y_data = np.array(y_data)
-            color_data_arr = np.array(color_data) if color_data is not None else None
-        
-        # Apply lithology filter
-        if filter_lithology and color_data_arr is not None:
-            mask = color_data_arr == filter_lithology
+            # Filter by lithology if requested
+            if filter_lithology and color_data is None:
+                df = df[df['LITHOLOGY'] == filter_lithology]
+    
+            # Use columns from CSV
+            if x_col is None or y_col is None:
+                raise ValueError("x_col and y_col must be provided when using csv_file_path")
+            x_data = df[x_col].to_numpy()
+            y_data = df[y_col].to_numpy()
+            if color_data is None and 'LITHOLOGY' in df.columns:
+                color_data = df['LITHOLOGY'].to_numpy()
+    
+        # Ensure x_data and y_data are provided if no CSV
+        if x_data is None or y_data is None:
+            raise ValueError("Must provide either csv_file_path or x_data and y_data arrays")
+    
+        # Filter lithology if using arrays and color_data
+        if filter_lithology is not None and color_data is not None:
+            mask = color_data == filter_lithology
             x_data = x_data[mask]
             y_data = y_data[mask]
-            color_data_arr = color_data_arr[mask] if color_data_arr is not None else None
-        
-        # Handle negatives
-        x_data = np.clip(x_data, 0, None)
-        y_data = np.clip(y_data, 0, None)
-        
+            color_data = color_data[mask]
+    
         # Fit regression
         model = LinearRegression()
-        model.fit(x_data, y_data)
-        y_pred = model.predict(x_data)
-        
+        model.fit(x_data.reshape(-1, 1), y_data)
+        y_pred = model.predict(x_data.reshape(-1, 1))
+    
         # Plot
         fig, ax = plt.subplots(figsize=(10, 6))
-        
-        if color_data_arr is not None and not filter_lithology:
-            unique_liths = np.unique(color_data_arr)
-            for lith in unique_liths:
-                mask = color_data_arr == lith
-                ax.scatter(x_data[mask], y_data[mask], label=str(lith), alpha=0.6)
+        if color_data is not None:
+            for c in np.unique(color_data):
+                mask = color_data == c
+                ax.scatter(x_data[mask], y_data[mask], label=str(c), alpha=0.6)
         else:
-            ax.scatter(x_data, y_data, label="Data points", color="blue", alpha=0.5)
-        
-        ax.plot(x_data, y_pred, color='red', linewidth=2, label='Linear fit')
-        
-        if x_in_log:
-            ax.set_xscale("log")
-        if y_in_log:
-            ax.set_yscale("log")
-        
-        ax.set_xlabel(x_label if x_label else (x_col if x_col else "X"), fontsize=10)
-        ax.set_ylabel(y_label if y_label else (y_col if y_col else "Y"), fontsize=10)
-        
+            ax.scatter(x_data, y_data, color="blue", alpha=0.5, label="Data points")
+    
+        ax.plot(x_data, y_pred, color="red", linewidth=2, label="Linear fit")
+    
+        if x_in_log: ax.set_xscale("log")
+        if y_in_log: ax.set_yscale("log")
+    
+        ax.set_xlabel(x_col if x_col else "X")
+        ax.set_ylabel(y_col if y_col else "Y")
         title_suffix = f" ({filter_lithology})" if filter_lithology else ""
-        ax.set_title(f'{ax.get_xlabel()} vs {ax.get_ylabel()} for {well_name}{title_suffix}', fontsize=12)
-        
-        ax.legend(title=color_data if csv_file_path else "Lithology")
+        ax.set_title(f"{x_col if x_col else 'X'} vs {y_col if y_col else 'Y'} for {well_name}{title_suffix}")
+        ax.legend()
         plt.tight_layout()
         plt.show()
-
         # Example usage:
         # visualiser.crossplot_2D(
         #    well_data_path,
