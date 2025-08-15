@@ -185,7 +185,10 @@ class VisualiseWellData():
         # Fit linear regression
         model = LinearRegression()
         model.fit(x_data, y_data)
-        y_pred = model.predict(x_data)
+
+        # Create a sorted sequence of X values for plotting the regression line
+        x_sorted = np.sort(x_data, axis=0)
+        y_pred_sorted = model.predict(x_sorted)
     
         # Plot
         fig, ax = plt.subplots(figsize=(10, 6))
@@ -198,7 +201,7 @@ class VisualiseWellData():
         else:
             ax.scatter(x_data, y_data, label="Data points", color="blue", alpha=0.5)
     
-        ax.plot(x_data, y_pred, color="red", linewidth=2, label="Linear fit")
+        ax.plot(x_sorted, y_pred_sorted, color="red", linewidth=2, label="Linear fit")
     
         if x_in_log:
             ax.set_xscale("log")
