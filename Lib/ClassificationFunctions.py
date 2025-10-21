@@ -248,6 +248,47 @@ class DataProcessing():
     
         return scaled_df
 
+    def compare_distributions(self, pre_data, standardised_data, column_pre, column_standardised, title="Feature Distribution Comparison"):
+        
+        """
+        Plots side-by-side distributions for a specific column in pre-processed/standardised and standardised data.
+        
+        Parameters:
+            pre_data (pd.DataFrame): DataFrame containing pre-standardised data.
+            standardised_data (pd.DataFrame): DataFrame containing standardised data.
+            column_pre (str): The column to plot (in pre_data).
+            column_standardised (str): The column to plot (in standardised_data).
+            title (str): Title for the entire plot.
+        """
+        
+        # Check if the specified column exists in both DataFrames
+        if column_pre not in pre_data.columns:
+            raise ValueError(f"Column '{column_pre}' not found in pre-processed/standardised dataframes.")
+        if column_standardised not in standardised_data.columns:
+            raise ValueError(f"Column '{column_standardised}' not found in standardised dataframes.")
+        
+        # Create a figure with two subplots
+        fig, axes = plt.subplots(ncols=2, figsize=(10, 4))
+        
+        # Plot pre-processed/standardised data
+        sns.histplot(pre_data[column_pre], ax=axes[0], kde=True, bins=30, color="darkslategray")
+        axes[0].set_title(f'Pre-processed/standardised {column_pre}', fontsize=10)
+        axes[0].set_xlabel(column_pre, fontsize=10)
+        axes[0].set_ylabel('Frequency', fontsize=10)
+        axes[0].grid(True)
+        
+        # Plot standardised data
+        sns.histplot(standardised_data[column_standardised], ax=axes[1], kde=True, bins=30, color="firebrick")
+        axes[1].set_title(f'Standardised {column_standardised}', fontsize=10)
+        axes[1].set_xlabel(column_standardised, fontsize=10)
+        axes[1].set_ylabel('Frequency', fontsize=10)
+        axes[1].grid(True)
+        
+        # Adjust layout and add a title
+        plt.suptitle(title, fontsize=12)
+        plt.tight_layout(rect=[0, 0, 0.95, 0.95])  # Adjust for the suptitle
+        plt.show()
+
 class KNNClassification():
     
     def __init__(self):
