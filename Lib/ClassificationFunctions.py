@@ -348,11 +348,13 @@ class KNNClassification():
     
         print(f"\nBest k: {best_k} with accuracy: {best_accuracy:.4f}")
 
+        error_rates = [1 - acc for acc in accuracy_scores]
+        
         plt.figure(figsize=(8, 5))
-        plt.plot(k_values, accuracy_scores, marker='o', linestyle='-')
+        plt.plot(k_values, error_rates, marker='o', linestyle='-')
         plt.xlabel("Number of Neighbours (k)")
-        plt.ylabel("Validation Accuracy")
-        plt.title("KNN Hyperparameter Tuning: Accuracy vs k")
+        plt.ylabel("Error Rate (i.e., 1 - Accuracy)")
+        plt.title("KNN Hyperparameter Tuning: Error Rate vs k")
         plt.show()
     
         # Return the best k, the trained model, and the best accuracy
