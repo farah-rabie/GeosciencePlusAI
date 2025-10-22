@@ -511,7 +511,7 @@ class KNNClassification():
         plt.show()
 
 
-    def plot_confusion_matrix(self, y_test, y_pred):
+    def plot_confusion_matrix(self, y_test, y_pred, percentage=True):
         
         """Plot confusion matrix for classification results."""
         
@@ -523,7 +523,10 @@ class KNNClassification():
         
         # Plot the heatmap
         plt.figure(figsize=(8, 6))
-        sns.heatmap(cm, annot=True, fmt="d", cmap="Greens", xticklabels=lithology_labels, yticklabels=lithology_labels)
+        if percentage:
+            sns.heatmap(cm/np.sum(cm), annot=True, fmt='.2%', cmap='Blues', xticklabels=lithology_labels, yticklabels=lithology_labels)
+        else:
+            sns.heatmap(cm, annot=True, fmt="d", cmap="Greens", xticklabels=lithology_labels, yticklabels=lithology_labels)
         plt.xlabel("Predicted")
         plt.ylabel("Actual")
         plt.title("Confusion Matrix")
