@@ -40,6 +40,6 @@ For details on data extraction, log descriptions, and file formats, see the READ
 This repository is licensed under the **MIT Licence**. See `LICENSE` for details.
 
 ### Who Can I Contact?
-Farah Rabie (fr2007@hw.ac.uk)
+Farah Rabie (f.rabie@hw.ac.uk)
 
 Prof. Vasily Demyanov (v.demyanov@hw.ac.uk)
