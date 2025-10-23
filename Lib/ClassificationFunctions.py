@@ -537,7 +537,7 @@ class RFClassification():
     def __init__(self):
         pass
 
-    def train_random_forest(self, df_train, df_val, feature_columns, target_column, rf_params=None):
+    def train_random_forest(self, df_train, df_val, feature_columns, target_column, rf_params=None, print_classification_report=False, print_classification_matrix=False):
         """
         Trains a Random Forest classifier with user-specified hyperparameters.
     
@@ -583,8 +583,10 @@ class RFClassification():
         # Evaluate performance
         accuracy = accuracy_score(y_val, y_pred)
         print(f"Validation Accuracy: {accuracy:.4f}")
-        print("\nClassification Report:\n", classification_report(y_val, y_pred, zero_division=0))
-        print("\nConfusion Matrix:\n", confusion_matrix(y_val, y_pred))
+        if print_classification_report:
+            print("\nClassification Report:\n", classification_report(y_val, y_pred, zero_division=0))
+        if print_classification_matrix:
+            print("\nConfusion Matrix:\n", confusion_matrix(y_val, y_pred))
     
         return rf_model, rf_params, accuracy, y_pred
 
