@@ -360,14 +360,14 @@ class KNNClassification():
         # Return the best k, the trained model, and the best accuracy
         return best_k, best_knn_classifier, best_accuracy
 
-    def train_knn(self, df_train, feature_columns, target_column, k):
+    def train_knn(self, df_train, feature_columns, target_column, k, weights='distance', metric='euclidean'):
         
         """Train a KNN classifier using a DataFrame."""
         
         X_train = df_train[feature_columns].values
         y_train = df_train[target_column].values
         
-        knn = KNeighborsClassifier(n_neighbors=k, weights='distance', metric='euclidean')
+        knn = KNeighborsClassifier(n_neighbors=k, weights=weights, metric=metric)
         knn.fit(X_train, y_train)
         return knn
 
