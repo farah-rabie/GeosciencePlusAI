@@ -97,7 +97,7 @@ class VisualiseWellData():
             column_data = df[column]
 
             if column_data.dropna().empty:
-                print(f"\n ⚠️ Warning: Column '{column}' is completely empty or contains only NaNs.")
+                print(f"\n Warning: Column '{column}' is completely empty or contains only NaNs.")
                 continue
 
             print(f"\nStatistics for '{column}':")
@@ -216,16 +216,6 @@ class VisualiseWellData():
     
         plt.tight_layout()
         plt.show()
-        
-        # Example usage:
-        # visualiser.crossplot_2D(
-        #    well_data_path,
-        #    well_name,
-        #    x_col='RHOB',
-        #    y_col='NPHI',
-        #    color_col='LITHOLOGY',
-        #    filter_lithology='Sandstone'
-        #)
 
     def plot_well_logs_and_lithology(self, csv_file_path, well_name):
         # Load the well data CSV
