@@ -182,14 +182,6 @@ class VisualiseWellData():
         if len(x_data) == 0 or len(y_data) == 0:
             raise ValueError("No data left after filtering; check your filter_lithology or input data.")
     
-        # Fit linear regression
-        model = LinearRegression()
-        model.fit(x_data, y_data)
-
-        # Create a sorted sequence of X values for plotting the regression line
-        x_sorted = np.sort(x_data, axis=0)
-        y_pred_sorted = model.predict(x_sorted)
-    
         # Plot
         fig, ax = plt.subplots(figsize=(10, 6))
     
@@ -201,8 +193,6 @@ class VisualiseWellData():
         else:
             ax.scatter(x_data, y_data, label="Data points", color="blue", alpha=0.5)
     
-        ax.plot(x_sorted, y_pred_sorted, color="red", linewidth=2, label="Linear fit")
-    
         if x_in_log:
             ax.set_xscale("log")
         if y_in_log:
@@ -212,10 +202,11 @@ class VisualiseWellData():
         ax.set_xlabel(x_col if x_col else "X", fontsize=10)
         ax.set_ylabel(y_col if y_col else "Y", fontsize=10)
         ax.set_title(f"{x_col} vs {y_col} for Well {well_name}{title_suffix}", fontsize=12)
-        ax.legend(title=color_col if color_col else "Legend")
+        ax.legend(title=color_col if color_col else "Lithology")
     
         plt.tight_layout()
         plt.show()
+
 
     def plot_well_logs_and_lithology(self, csv_file_path, well_name):
         # Load the well data CSV
