@@ -38,7 +38,7 @@ For details on data extraction, log descriptions, and file formats, see the READ
 1. Start with **visualisation** to explore well log distributions.  
 2. Use **clustering methods** to segment data based on feature similarities.  
 3. Train and evaluate **classification models**, namely KNN and RF.
-4. Train a **neural network** to predict permeability (KLOGH).
+4. Train a **neural network** to predict permeability from well log measurements.
 
 ### Licence
 
