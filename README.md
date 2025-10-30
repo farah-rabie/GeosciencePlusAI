@@ -22,6 +22,10 @@ The notebooks in this repository follow a structured workflow:
    - **K-Nearest Neighbours** (KNN): A distance-based classification method that predicts lithology labels by considering the majority class among the nearest neighbors of a data point.
    - **Random Forest** (RF): An ensemble learning method that builds multiple decision trees to improve classification performance by aggregating predictions, enhancing accuracy, and reducing overfitting.
    - **Support Vector Machine** (SVM): A powerful classification algorithm that finds the optimal hyperplane to separate classes in the feature space. It is particularly effective for high-dimensional datasets and can model complex decision boundaries using different kernel functions (e.g., linear, RBF, polynomial).
+ 
+- **Permeability Prediction with Neural Networks**  
+   - Use a feedforward *neural network* to predict permeability (KLOGH) from well log measurements.
+   - Analyse network predictions to evaluate how well trends in permeability are captured.
 
 ### Data
 
