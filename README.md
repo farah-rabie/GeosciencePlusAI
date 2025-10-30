@@ -2,7 +2,7 @@
 
 This repository is part of the teaching material for *Geoscience with Integrated Data Science* at *Heriot-Watt University*.
 
-It includes applications of **Machine Learning** (ML) techniques - specifically **clustering** and **classification** - to well log data. While these methods can be applied to any well log dataset, this repository uses well log data from seven wells in the **Volve** field dataset as an example. 
+It includes applications of **Machine Learning** (ML) techniques - specifically **clustering**, **classification** and **regression** - to well log data. While these methods can be applied to any well log dataset, this repository uses well log data from seven wells in the **Volve** field dataset as an example. 
 
 ### Overview
 
