@@ -126,28 +126,25 @@ class VisualiseWellData():
         x_data=None,
         y_data=None,
         color_col=None,
-        color_data=None,
         filter_lithology=None,
         x_in_log=False,
         y_in_log=False
-    ):
-        
+        ):
         """
-        Crossplot RHOB vs NPHI (or other columns) with optional coloring by lithology.
+        Crossplot of x vs y with optional coloring by lithology.
         
         Parameters:
             well_name (str): Name of the well.
             csv_file_path (str): Path to CSV file (optional if df or arrays are provided).
-            df (pd.DataFrame): DataFrame with data (optional if CSV path or arrays are provided).
+            df (pd.DataFrame): DataFrame with data (optional if CSV path is provided).
             x_col, y_col (str): Column names in df or CSV (ignored if using arrays).
             x_data, y_data (np.array): NumPy arrays with data (optional if CSV/df is used).
-            color_col (str): Column name for coloring (ignored if using arrays).
-            color_data (np.array): NumPy array with color/lithology info.
+            color_col (str): Column name for coloring (lithology).
             filter_lithology (str): Optional, filter by a specific lithology.
             x_in_log, y_in_log (bool): Use log scale for axes.
         """
-        
-        # Load DataFrame if provided CSV path
+    
+        # Load DataFrame if CSV provided
         if csv_file_path:
             df = pd.read_csv(csv_file_path)
     
@@ -161,23 +158,14 @@ class VisualiseWellData():
             drop_cols = [x_col, y_col] + ([color_col] if color_col else [])
             df = df.dropna(subset=drop_cols)
     
-            x_data = df[x_col].values.reshape(-1, 1)
+            x_data = df[x_col].values
             y_data = df[y_col].values
-            if color_col:
-                color_data = df[color_col].values
         else:
             # Arrays must be provided
             if x_data is None or y_data is None:
                 raise ValueError("x_data and y_data arrays must be provided if no DataFrame or CSV is given.")
-            x_data = x_data.reshape(-1, 1)
-            y_data = y_data.reshape(-1) if y_data.ndim > 1 else y_data
-    
-            # Filter by lithology if requested
-            if filter_lithology and color_data is not None:
-                mask = color_data == filter_lithology
-                x_data = x_data[mask]
-                y_data = y_data[mask]
-                color_data = color_data[mask]
+            x_data = x_data.reshape(-1)
+            y_data = y_data.reshape(-1)
     
         if len(x_data) == 0 or len(y_data) == 0:
             raise ValueError("No data left after filtering; check your filter_lithology or input data.")
@@ -185,24 +173,30 @@ class VisualiseWellData():
         # Plot
         fig, ax = plt.subplots(figsize=(10, 6))
     
-        if color_data is not None:
-            unique_colors = np.unique(color_data)
-            for c in unique_colors:
-                mask = color_data == c
-                ax.scatter(x_data[mask], y_data[mask], label=str(c), alpha=0.6)
+        if color_col is not None:
+            if filter_lithology:  # Only one lithology after filtering
+                ax.scatter(x_data, y_data, label=filter_lithology, alpha=0.6)
+            else:  # Multiple lithologies
+                unique_colors = np.unique(df[color_col].values)
+                for c in unique_colors:
+                    mask = df[color_col].values == c
+                    ax.scatter(x_data[mask], y_data[mask], label=str(c), alpha=0.6)
         else:
-            ax.scatter(x_data, y_data, label="Data points", color="blue", alpha=0.5)
+            ax.scatter(x_data, y_data, color="blue", alpha=0.6)
     
+        # Axis scales
         if x_in_log:
             ax.set_xscale("log")
         if y_in_log:
             ax.set_yscale("log")
     
+        # Labels and title
         title_suffix = f" ({filter_lithology})" if filter_lithology else ""
         ax.set_xlabel(x_col if x_col else "X", fontsize=10)
         ax.set_ylabel(y_col if y_col else "Y", fontsize=10)
         ax.set_title(f"{x_col} vs {y_col} for Well {well_name}{title_suffix}", fontsize=12)
-        ax.legend(title=color_col if color_col else "Lithology")
+        if color_col or filter_lithology:
+            ax.legend(title=color_col if color_col else "Lithology")
     
         plt.tight_layout()
         plt.show()
