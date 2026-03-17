@@ -41,7 +41,7 @@ For details on data extraction, log descriptions, and file formats, see the READ
 
 ### Licence
 
-This repository is licensed under the **MIT Licence**. See `LICENSE` for details.
+See `LICENSE` for details.
 
 ### Who Can I Contact?
 Farah Rabie (f.rabie@hw.ac.uk)
