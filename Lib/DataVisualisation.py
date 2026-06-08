@@ -3,12 +3,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
 import matplotlib.patches as mpatches
-import matplotlib.ticker as ticker
 from itertools import groupby
-from sklearn.linear_model import LinearRegression
 
 class VisualiseWellData():
- 
+
     def __init__(self):
         
         self.lithology_labels = {
@@ -21,21 +19,29 @@ class VisualiseWellData():
         }
 
     def visualise_lithology_distribution(self, csv_file_path, well_name, display='count'):
+        """
+        Plot the distribution of lithology types for a selected well.
+
+        Parameters:
+            csv_file_path (str): Path to the well CSV file.
+            well_name (str): Name of the well (used in the plot title).
+            display (str): How to annotate bars — 'count', 'percentage', or 'both'.
+        """
         # Load the CSV file into a DataFrame
         df = pd.read_csv(csv_file_path)
- 
+
         # Check if 'LITHOLOGY' column exists
         if 'LITHOLOGY' not in df.columns:
             print("Column 'LITHOLOGY' not found in the CSV file.")
             return
- 
+
         # Get lithology distribution
         lithology_counts = df['LITHOLOGY'].value_counts()
         total = lithology_counts.sum()
- 
+
         # Dictionary of lithology properties (color, hatch symbol)
         lithology_dict = self.lithology_labels
- 
+
         # Plot the distribution
         fig, ax = plt.subplots(figsize=(10, 8))
         bars = []
@@ -43,10 +49,10 @@ class VisualiseWellData():
         for lithology, count in lithology_counts.items():
             color = lithology_dict.get(lithology, {}).get('color', '#D2B48C')  # Default color
             hatch = lithology_dict.get(lithology, {}).get('hatch', '')  # Default hatch
- 
+
             bar = ax.bar(lithology, count, color=color, hatch=hatch)
             bars.append((bar, count))
- 
+
         # Add annotations
         for bar, count in bars:
             for rect in bar:
@@ -58,17 +64,18 @@ class VisualiseWellData():
                     label = f"{percent:.1f}%"
                 elif display == 'both':
                     label = f"{int(count)}\n({percent:.1f}%)"
- 
+
                 ax.text(rect.get_x() + rect.get_width() / 2, rect.get_height(), label,
                         ha='center', va='bottom', fontsize=10)
 
-        # Custom legend
+        # Custom legend — only show lithologies present in this well
         legend_handles = [
             Patch(facecolor=lithology_dict[lithology]["color"], hatch=lithology_dict[lithology]["hatch"], label=lithology)
             for lithology in lithology_dict
+            if lithology in lithology_counts.index
         ]
         ax.legend(handles=legend_handles, title='Lithology', bbox_to_anchor=(1.05, 1), loc='upper left')
- 
+
         # Labels and formatting
         ax.set_ylabel('Count', fontsize=10)
         ax.set_xlabel('Lithology', fontsize=10)
@@ -78,43 +85,35 @@ class VisualiseWellData():
         plt.show()
         
     def show_available_logs(self, csv_file_path):
-        # Load the CSV file into a DataFrame
+        """
+        Summarise available well logs for the selected well.
+
+        Returns a DataFrame with count, mean, std, min, and max for each log.
+        Logs that are completely empty are flagged with a warning.
+
+        Parameters:
+            csv_file_path (str): Path to the well CSV file.
+        """
         df = pd.read_csv(csv_file_path)
- 
-        # Check if the file has any data
+
         if df.empty:
             print("The CSV file is empty.")
             return
- 
-        # Show the column names (which represent the available logs)
-        print("Available logs in the data file:")
- 
-        # Iterate through each column and print statistics
-        for column in df.columns:
-            if column == 'LITHOLOGY':  # Skip the 'LITHOLOGY' column
-                continue
- 
-            column_data = df[column]
- 
-            if column_data.dropna().empty:
-                print(f"\n Warning: Column '{column}' is completely empty or contains only NaNs.")
-                continue
- 
-            print(f"\nStatistics for '{column}':")
- 
-            # Calculate statistics
-            count = column_data.count()
-            mean = column_data.mean()
-            std_dev = column_data.std()
-            min_val = column_data.min()
-            max_val = column_data.max()
- 
-            # Print the statistics
-            print(f"  Count: {count}")
-            print(f"  Mean: {mean:.3f}")
-            print(f"  Standard Deviation: {std_dev:.3f}")
-            print(f"  Min: {min_val}")
-            print(f"  Max: {max_val}")
+
+        log_cols = [col for col in df.columns if col not in ('LITHOLOGY', 'DEPTH')]
+
+        empty_logs = [col for col in log_cols if df[col].dropna().empty]
+        if empty_logs:
+            print(f"Warning: the following logs are completely empty and excluded: {empty_logs}")
+
+        log_cols = [col for col in log_cols if col not in empty_logs]
+
+        stats = df[log_cols].agg(['count', 'mean', 'std', 'min', 'max']).T
+        stats.columns = ['Count', 'Mean', 'Std', 'Min', 'Max']
+        stats['Count'] = stats['Count'].astype(int)
+        stats = stats.round(3)
+
+        return stats
 
     def crossplot_2D(
         self,
@@ -175,12 +174,14 @@ class VisualiseWellData():
     
         if color_col is not None:
             if filter_lithology:  # Only one lithology after filtering
-                ax.scatter(x_data, y_data, label=filter_lithology, alpha=0.6)
+                color = self.lithology_labels.get(filter_lithology, {}).get('color', '#1f77b4')
+                ax.scatter(x_data, y_data, label=filter_lithology, color=color, alpha=0.6)
             else:  # Multiple lithologies
-                unique_colors = np.unique(df[color_col].values)
-                for c in unique_colors:
-                    mask = df[color_col].values == c
-                    ax.scatter(x_data[mask], y_data[mask], label=str(c), alpha=0.6)
+                unique_lithologies = np.unique(df[color_col].values)
+                for lith in unique_lithologies:
+                    mask = df[color_col].values == lith
+                    color = self.lithology_labels.get(lith, {}).get('color', '#1f77b4')
+                    ax.scatter(x_data[mask], y_data[mask], label=str(lith), color=color, alpha=0.6)
         else:
             ax.scatter(x_data, y_data, color="blue", alpha=0.6)
     
@@ -200,18 +201,19 @@ class VisualiseWellData():
     
         plt.tight_layout()
         plt.show()
-            
+
+
     def plot_well_logs_and_lithology(self, csv_file_path, well_name, logs=None):
         """
         Plot well logs alongside lithology for a selected well.
- 
+
         Parameters:
             csv_file_path (str): Path to the well CSV file.
             well_name (str): Name of the well (used in the plot title).
             logs (list): List of log names to plot. Defaults to all available logs.
                          Available logs: 'BVW', 'KLOGH', 'VSH', 'DT', 'GR', 'NPHI', 'PEF', 'RHOB', 'RT'
         """
- 
+
         # All supported logs with their display properties
         log_properties = {
             'BVW':   {'label': 'BVW (Bulk Volume Water)',   'color': 'darkred',      'log_scale': False},
@@ -224,20 +226,20 @@ class VisualiseWellData():
             'RHOB':  {'label': 'RHOB (Bulk Density)',       'color': 'slategray',    'log_scale': False},
             'RT':    {'label': 'RT (Resistivity)',          'color': 'black',        'log_scale': True},
         }
- 
+
         # Default to all logs if none specified
         if logs is None:
             logs = list(log_properties.keys())
- 
+
         # Validate selected logs
         invalid = [l for l in logs if l not in log_properties]
         if invalid:
             raise ValueError(f"Invalid log(s): {invalid}. Available logs: {list(log_properties.keys())}")
- 
+
         # Load data
         well_data = pd.read_csv(csv_file_path)
         DEPTH = well_data['DEPTH'].values
- 
+
         # Replace negative values with zero
         for col in logs:
             if col in well_data.columns:
@@ -245,18 +247,18 @@ class VisualiseWellData():
                 if mask.any():
                     print(f"Warning: {mask.sum()} negative values found in {col}. Replacing with 0.")
                     well_data.loc[mask, col] = 0
- 
+
         # Lithology data
         depth_for_lithology = well_data['DEPTH'].values
         lithology = well_data['LITHOLOGY'].values
- 
+
         # Dynamic subplot grid: logs + 1 lithology column
         n_cols = len(logs) + 1
         fig_width = max(15, n_cols * 2)
         fig, axes = plt.subplots(1, n_cols, figsize=(fig_width, 15))
         if n_cols == 1:
             axes = [axes]
- 
+
         # Plot each selected log
         for i, log in enumerate(logs):
             ax = axes[i]
@@ -269,7 +271,7 @@ class VisualiseWellData():
                 ax.set_ylabel('Depth (m)', labelpad=10, fontsize=12)
             else:
                 ax.tick_params(labelleft=False)
- 
+
         # Lithology panel (always last)
         ax_lith = axes[-1]
         intervals = []
@@ -280,12 +282,12 @@ class VisualiseWellData():
             top = depth_for_lithology[start_idx]
             base = depth_for_lithology[end_idx]
             intervals.append((top, base, key))
- 
+
         for top, base, lith in intervals:
             hatch = self.lithology_labels.get(lith, {}).get('hatch', '')
             color = self.lithology_labels.get(lith, {}).get('color', '#D2B48C')
             ax_lith.fill_betweenx([top, base], 0, 1, facecolor=color, hatch=hatch, edgecolor='k')
- 
+
         handles = [
             mpatches.Patch(facecolor=attrs['color'], hatch=attrs['hatch'], edgecolor='k', label=lith)
             for lith, attrs in self.lithology_labels.items()
@@ -295,17 +297,16 @@ class VisualiseWellData():
         ax_lith.set_xlabel('Lithology', labelpad=20, fontsize=12)
         ax_lith.set_xticks([])
         ax_lith.tick_params(labelleft=False)
- 
+
         # Common depth axis settings
         for ax in axes:
             ax.set_ylim(max(depth_for_lithology), min(depth_for_lithology))
             ax.xaxis.set_ticks_position("top")
             ax.xaxis.set_label_position("top")
- 
+
         fig.subplots_adjust(wspace=0.5)
         fig.suptitle(f"Well Logs and Lithology for {well_name}", fontsize=16, y=1.02)
         plt.show()
- 
+
 # References
 #Andy McDonald. (2020). Petrophysics-Python-Series/14 - Displaying Lithology Data.ipynb at master · andymcdgeo/Petrophysics-Python-Series. GitHub. https://github.com/andymcdgeo/Petrophysics-Python-Series/blob/master/14%20-%20Displaying%20Lithology%20Data.ipynb
-
