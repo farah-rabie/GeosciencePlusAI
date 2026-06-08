@@ -285,9 +285,17 @@ class DataProcessing():
         plt.show()
 
 class KMeansClustering():
-    
+
     def __init__(self):
-        pass
+        # Lithology display properties — shared across all plotting methods
+        self.lithology_labels = {
+            'sandstone': {'color': '#ffff00', 'hatch': '..'},
+            'marl':      {'color': '#80ffff', 'hatch': ''},
+            'limestone': {'color': '#4682B4', 'hatch': '++'},
+            'coal':      {'color': 'black',   'hatch': ''},
+            'silt':      {'color': '#7cfc00', 'hatch': '||'},
+            'claystone': {'color': '#228B22', 'hatch': '--'},
+        }
         
     def elbow_method(self, data, max_k, random_state=42):
     
