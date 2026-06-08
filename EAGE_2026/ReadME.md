@@ -15,8 +15,6 @@ You can use Google Colab to access and run the notebooks. For this, you will nee
 * [Notebook 3](https://colab.research.google.com/drive/1FiOngddyVfD5Kfifc2U__yOMTJV3p4pf?usp=sharing) covering classification using machine learning algorithms
 * [Notebook 4](https://colab.research.google.com/drive/1prGh-dBuJhpCs02aWda9DU0_j0kFqMGh?usp=sharing) on permeability prediction using a feedforward neural network
 
-The Google Colab versions of the notebooks are the most up-to-date.
-
 ### How to Use
 
 Click on a notebook link to open it in Google Colab. In the Colab interface, go to **File > Save a copy in Drive** to save your own editable copy.
