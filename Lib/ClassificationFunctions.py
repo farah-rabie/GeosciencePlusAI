@@ -295,9 +295,16 @@ class DataProcessing():
         plt.show()
 
 class KNNClassification():
-    
+
     def __init__(self):
-        pass
+        self.lithology_labels = {
+            'Sandstone': {'color': '#ffff00', 'hatch': '..'},
+            'Marl':      {'color': '#80ffff', 'hatch': ''},
+            'Limestone': {'color': '#4682B4', 'hatch': '++'},
+            'Coal':      {'color': 'black',   'hatch': ''},
+            'Silt':      {'color': '#7cfc00', 'hatch': '||'},
+            'Claystone': {'color': '#228B22', 'hatch': '--'},
+        }
         
     def tune_knn_k(self, df_train, df_val, feature_columns, target_column, k_max=None, weights='distance', metric='euclidean'):
         
