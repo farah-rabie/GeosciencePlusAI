@@ -97,32 +97,53 @@ class DataProcessing():
         plt.tight_layout()
         plt.show()
 
-    def process_well_data(self, file_paths, selected_columns, method='standard', train_data=False, val_data=False, show_stats=False, show_rows=False, filter_lithology=None):
-        
+    def process_well_data(self, file_paths, selected_columns, method='standard', train_data=False, val_data=False, show_stats=False, show_rows=False, filter_lithology=None, gr_cap=150, log_transform=None):
+        """
+        Combines and processes data from multiple CSV files.
+
+        Parameters:
+            file_paths (list): List of file paths for the CSV files.
+            selected_columns (list): List of columns to extract and process.
+            method (str): Scaling method — 'standard', 'minmax_01', or 'minmax_11'.
+            train_data (bool): If True, combines data and computes scaling parameters.
+            val_data (bool): If True, combines data without computing scaling parameters.
+                             If both are False, keeps data for each file in a separate DataFrame.
+            show_stats (bool): Whether to display descriptive statistics.
+            show_rows (bool): Whether to display the first few rows.
+            filter_lithology (str): Optional lithology to filter by (e.g. 'Sandstone').
+            gr_cap (int or float): Upper limit for GR values. Default is 150.
+            log_transform (list): Logs to apply log1p transformation to. Defaults to ['KLOGH', 'RT'].
+
+        Returns:
+            pd.DataFrame or list of pd.DataFrame: Processed DataFrame(s).
+        """
         combined_data = []
         individual_dataframes = []
     
+        if log_transform is None:
+            log_transform = ['KLOGH', 'RT']
+
         for file in file_paths:
             df = pd.read_csv(file)  # Load the data
             df = df[selected_columns]  # Select relevant columns
             df.dropna(inplace=True)  # Drop missing values
-    
-            # --- New: filter by lithology if requested ---
+
+            # Filter by lithology if requested
             if filter_lithology and 'LITHOLOGY' in df.columns:
                 df = df[df['LITHOLOGY'] == filter_lithology]
-    
+
             numeric_columns = [col for col in selected_columns if col not in ['DEPTH', 'LITHOLOGY']]
             df = df[(df[numeric_columns] >= 0).all(axis=1)]  # Remove negative values
-    
-            # Compute logarithms for 'KLOGH' and 'RT' if necessary
-            if 'KLOGH' in df.columns:
-                df['log_KLOGH'] = np.log1p(df['KLOGH'])
-                df.drop(columns=['KLOGH'], inplace=True)
-            if 'RT' in df.columns:
-                df['log_RT'] = np.log1p(df['RT'])
-                df.drop(columns=['RT'], inplace=True)
+
+            # Apply log1p transformation to selected logs
+            for log in log_transform:
+                if log in df.columns:
+                    df[f'log_{log}'] = np.log1p(df[log])  # log(1 + x) for stability
+                    df.drop(columns=[log], inplace=True)
+
+            # Cap GR values
             if 'GR' in df.columns:
-                df = df[df['GR'] <= 150]
+                df = df[df['GR'] <= gr_cap]
     
             individual_dataframes.append(df)
             combined_data.append(df)
