@@ -8,7 +8,7 @@ from itertools import groupby
 from sklearn.linear_model import LinearRegression
 
 class VisualiseWellData():
-
+ 
     def __init__(self):
         
         self.lithology_labels = {
@@ -23,19 +23,19 @@ class VisualiseWellData():
     def visualise_lithology_distribution(self, csv_file_path, well_name, display='count'):
         # Load the CSV file into a DataFrame
         df = pd.read_csv(csv_file_path)
-
+ 
         # Check if 'LITHOLOGY' column exists
         if 'LITHOLOGY' not in df.columns:
             print("Column 'LITHOLOGY' not found in the CSV file.")
             return
-
+ 
         # Get lithology distribution
         lithology_counts = df['LITHOLOGY'].value_counts()
         total = lithology_counts.sum()
-
+ 
         # Dictionary of lithology properties (color, hatch symbol)
         lithology_dict = self.lithology_labels
-
+ 
         # Plot the distribution
         fig, ax = plt.subplots(figsize=(10, 8))
         bars = []
@@ -43,10 +43,10 @@ class VisualiseWellData():
         for lithology, count in lithology_counts.items():
             color = lithology_dict.get(lithology, {}).get('color', '#D2B48C')  # Default color
             hatch = lithology_dict.get(lithology, {}).get('hatch', '')  # Default hatch
-
+ 
             bar = ax.bar(lithology, count, color=color, hatch=hatch)
             bars.append((bar, count))
-
+ 
         # Add annotations
         for bar, count in bars:
             for rect in bar:
@@ -58,7 +58,7 @@ class VisualiseWellData():
                     label = f"{percent:.1f}%"
                 elif display == 'both':
                     label = f"{int(count)}\n({percent:.1f}%)"
-
+ 
                 ax.text(rect.get_x() + rect.get_width() / 2, rect.get_height(), label,
                         ha='center', va='bottom', fontsize=10)
 
@@ -68,7 +68,7 @@ class VisualiseWellData():
             for lithology in lithology_dict
         ]
         ax.legend(handles=legend_handles, title='Lithology', bbox_to_anchor=(1.05, 1), loc='upper left')
-
+ 
         # Labels and formatting
         ax.set_ylabel('Count', fontsize=10)
         ax.set_xlabel('Lithology', fontsize=10)
@@ -80,35 +80,35 @@ class VisualiseWellData():
     def show_available_logs(self, csv_file_path):
         # Load the CSV file into a DataFrame
         df = pd.read_csv(csv_file_path)
-
+ 
         # Check if the file has any data
         if df.empty:
             print("The CSV file is empty.")
             return
-
+ 
         # Show the column names (which represent the available logs)
         print("Available logs in the data file:")
-
+ 
         # Iterate through each column and print statistics
         for column in df.columns:
             if column == 'LITHOLOGY':  # Skip the 'LITHOLOGY' column
                 continue
-
+ 
             column_data = df[column]
-
+ 
             if column_data.dropna().empty:
                 print(f"\n Warning: Column '{column}' is completely empty or contains only NaNs.")
                 continue
-
+ 
             print(f"\nStatistics for '{column}':")
-
+ 
             # Calculate statistics
             count = column_data.count()
             mean = column_data.mean()
             std_dev = column_data.std()
             min_val = column_data.min()
             max_val = column_data.max()
-
+ 
             # Print the statistics
             print(f"  Count: {count}")
             print(f"  Mean: {mean:.3f}")
@@ -200,117 +200,112 @@ class VisualiseWellData():
     
         plt.tight_layout()
         plt.show()
-
-
-    def plot_well_logs_and_lithology(self, csv_file_path, well_name):
-        # Load the well data CSV
+            
+    def plot_well_logs_and_lithology(self, csv_file_path, well_name, logs=None):
+        """
+        Plot well logs alongside lithology for a selected well.
+ 
+        Parameters:
+            csv_file_path (str): Path to the well CSV file.
+            well_name (str): Name of the well (used in the plot title).
+            logs (list): List of log names to plot. Defaults to all available logs.
+                         Available logs: 'BVW', 'KLOGH', 'VSH', 'DT', 'GR', 'NPHI', 'PEF', 'RHOB', 'RT'
+        """
+ 
+        # All supported logs with their display properties
+        log_properties = {
+            'BVW':   {'label': 'BVW (Bulk Volume Water)',   'color': 'darkred',      'log_scale': False},
+            'KLOGH': {'label': 'KLOGH (Permeability)',      'color': 'royalblue',    'log_scale': False},
+            'VSH':   {'label': 'VSH (Shale Volume)',        'color': 'forestgreen',  'log_scale': False},
+            'DT':    {'label': 'DT (Travel Time)',          'color': 'orange',       'log_scale': True},
+            'GR':    {'label': 'GR (Gamma Ray)',            'color': 'mediumpurple', 'log_scale': False},
+            'NPHI':  {'label': 'NPHI (Neutron Porosity)',   'color': 'teal',         'log_scale': False},
+            'PEF':   {'label': 'PEF (Photoelectric Factor)','color': 'crimson',      'log_scale': False},
+            'RHOB':  {'label': 'RHOB (Bulk Density)',       'color': 'slategray',    'log_scale': False},
+            'RT':    {'label': 'RT (Resistivity)',          'color': 'black',        'log_scale': True},
+        }
+ 
+        # Default to all logs if none specified
+        if logs is None:
+            logs = list(log_properties.keys())
+ 
+        # Validate selected logs
+        invalid = [l for l in logs if l not in log_properties]
+        if invalid:
+            raise ValueError(f"Invalid log(s): {invalid}. Available logs: {list(log_properties.keys())}")
+ 
+        # Load data
         well_data = pd.read_csv(csv_file_path)
-
-        # Extracting necessary well log columns
         DEPTH = well_data['DEPTH'].values
-        BVW = well_data['BVW'].values
-        KLOGH = well_data['KLOGH'].values
-        VSH = well_data['VSH'].values
-        DT = well_data['DT'].values
-        GR = well_data['GR'].values
-        NPHI = well_data['NPHI'].values
-        PEF = well_data['PEF'].values
-        RHOB = well_data['RHOB'].values
-        RT = well_data['RT'].values
-
-        # Lithology data
-        lithology_data = well_data[['DEPTH', 'LITHOLOGY']]  
-        depth_for_lithology = lithology_data['DEPTH'].values
-        lithology = lithology_data['LITHOLOGY'].values
-
+ 
         # Replace negative values with zero
-        for column_name, column_data in zip(
-            ['DEPTH', 'BVW', 'KLOGH', 'VSH', 'DT', 'GR', 'NPHI', 'PEF', 'RHOB', 'RT'],
-            [DEPTH, BVW, KLOGH, VSH, DT, GR, NPHI, PEF, RHOB, RT]
-        ):
-            negative_indices = column_data < 0
-            if any(negative_indices):
-                print(f"Warning: {sum(negative_indices)} negative values found in {column_name}. Replacing with 0.")
-                column_data[negative_indices] = 0
-
-        # Create subplots
-        fig, axes = plt.subplots(2, 5, figsize=(15, 30))
-        ax1, ax2, ax3, ax4, ax5, ax6, ax7, ax8, ax9, ax10 = axes.flatten()
-
-        # Plot each log
-        ax1.plot(BVW, DEPTH, color="darkred", lw=2.5)
-        ax1.set_xlabel('BVW (Bulk Volume Water)', labelpad=10, fontsize=12)
-        ax1.set_ylabel('Depth (m)', labelpad=10, fontsize=12)
-
-        ax2.plot(KLOGH, DEPTH, color="royalblue", lw=2.5)
-        ax2.set_xlabel('KLOGH (Permeability)', labelpad=10, fontsize=12)
-
-        ax3.plot(VSH, DEPTH, color="forestgreen", lw=2.5)
-        ax3.set_xlabel('VSH (Shale Volume)', labelpad=10, fontsize=12)
-
-        ax4.plot(DT, DEPTH, color="orange", lw=2.5)
-        ax4.set_xlabel('DT (Travel Time)', labelpad=10, fontsize=12)
-        ax4.set_xscale('log')
-
-        ax5.plot(GR, DEPTH, color="mediumpurple", lw=2.5)
-        ax5.set_xlabel('GR (Gamma Ray)', labelpad=10, fontsize=12)
-
-        ax6.plot(NPHI, DEPTH, color="teal", lw=2.5)
-        ax6.set_xlabel('NPHI (Neutron Porosity)', labelpad=10, fontsize=12)
-
-        ax7.plot(PEF, DEPTH, color="crimson", lw=2.5)
-        ax7.set_xlabel('PEF (Photoelectric Factor)', labelpad=10, fontsize=12)
-
-        ax8.plot(RHOB, DEPTH, color="slategray", lw=2.5)
-        ax8.set_xlabel('RHOB (Bulk Density)', labelpad=10, fontsize=12)
-
-        ax9.plot(RT, DEPTH, color="black", lw=2.5)
-        ax9.set_xlabel('RT (Resistivity)', labelpad=10, fontsize=12)
-        ax9.set_xscale('log')
-
-        # --- Optimized lithology plotting ---
+        for col in logs:
+            if col in well_data.columns:
+                mask = well_data[col] < 0
+                if mask.any():
+                    print(f"Warning: {mask.sum()} negative values found in {col}. Replacing with 0.")
+                    well_data.loc[mask, col] = 0
+ 
+        # Lithology data
+        depth_for_lithology = well_data['DEPTH'].values
+        lithology = well_data['LITHOLOGY'].values
+ 
+        # Dynamic subplot grid: logs + 1 lithology column
+        n_cols = len(logs) + 1
+        fig_width = max(15, n_cols * 2)
+        fig, axes = plt.subplots(1, n_cols, figsize=(fig_width, 15))
+        if n_cols == 1:
+            axes = [axes]
+ 
+        # Plot each selected log
+        for i, log in enumerate(logs):
+            ax = axes[i]
+            props = log_properties[log]
+            ax.plot(well_data[log].values, DEPTH, color=props['color'], lw=2.5)
+            ax.set_xlabel(props['label'], labelpad=10, fontsize=12)
+            if props['log_scale']:
+                ax.set_xscale('log')
+            if i == 0:
+                ax.set_ylabel('Depth (m)', labelpad=10, fontsize=12)
+            else:
+                ax.tick_params(labelleft=False)
+ 
+        # Lithology panel (always last)
+        ax_lith = axes[-1]
         intervals = []
         for key, group in groupby(enumerate(lithology), key=lambda x: x[1]):
             group = list(group)
             start_idx = group[0][0]
-            end_idx = group[-1][0] + 1  # inclusive
-            lith = key
-            if end_idx >= len(depth_for_lithology):  # avoid out-of-range
-                end_idx = len(depth_for_lithology) - 1
+            end_idx = min(group[-1][0] + 1, len(depth_for_lithology) - 1)
             top = depth_for_lithology[start_idx]
             base = depth_for_lithology[end_idx]
-            intervals.append((top, base, lith))
-
+            intervals.append((top, base, key))
+ 
         for top, base, lith in intervals:
             hatch = self.lithology_labels.get(lith, {}).get('hatch', '')
             color = self.lithology_labels.get(lith, {}).get('color', '#D2B48C')
-            ax10.fill_betweenx([top, base], 0, 1, facecolor=color, hatch=hatch, edgecolor='k')
-
-        # Lithology legend
+            ax_lith.fill_betweenx([top, base], 0, 1, facecolor=color, hatch=hatch, edgecolor='k')
+ 
         handles = [
             mpatches.Patch(facecolor=attrs['color'], hatch=attrs['hatch'], edgecolor='k', label=lith)
             for lith, attrs in self.lithology_labels.items()
         ]
-        ax10.legend(handles=handles, loc='upper center', bbox_to_anchor=(0.5, 1.15), ncol=len(handles), fancybox=True, fontsize=12)
-        ax10.set_xlabel('Lithology', labelpad=20, fontsize=12)
-        ax10.set_xticks([])
-
-        # Set common depth scale and orientation
-        for ax in [ax1, ax2, ax3, ax4, ax5, ax6, ax7, ax8, ax9, ax10]:
-            ax.set_ylim(max(depth_for_lithology), min(depth_for_lithology))  # Invert
+        ax_lith.legend(handles=handles, loc='upper center', bbox_to_anchor=(0.5, 1.15),
+                       ncol=len(handles), fancybox=True, fontsize=12)
+        ax_lith.set_xlabel('Lithology', labelpad=20, fontsize=12)
+        ax_lith.set_xticks([])
+        ax_lith.tick_params(labelleft=False)
+ 
+        # Common depth axis settings
+        for ax in axes:
+            ax.set_ylim(max(depth_for_lithology), min(depth_for_lithology))
             ax.xaxis.set_ticks_position("top")
             ax.xaxis.set_label_position("top")
-
-            # Hide y-axis tick labels for all but the first column
-            for ax in [ax2, ax3, ax4, ax5, ax7, ax8, ax9, ax10]:
-                ax.tick_params(labelleft=False)
-
+ 
         fig.subplots_adjust(wspace=0.5)
-        fig.suptitle(f"Well Logs and Lithology for {well_name}", fontsize=16, y=0.92)
+        fig.suptitle(f"Well Logs and Lithology for {well_name}", fontsize=16, y=1.02)
         plt.show()
-
+ 
 # References
 #Andy McDonald. (2020). Petrophysics-Python-Series/14 - Displaying Lithology Data.ipynb at master · andymcdgeo/Petrophysics-Python-Series. GitHub. https://github.com/andymcdgeo/Petrophysics-Python-Series/blob/master/14%20-%20Displaying%20Lithology%20Data.ipynb
-
-
 
