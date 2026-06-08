@@ -5,15 +5,24 @@ import matplotlib.pyplot as plt
 from sklearn.utils import shuffle
 from itertools import groupby
 import matplotlib.patches as mpatches
-from sklearn.preprocessing import MinMaxScaler
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 
 class DataProcessing():
 
     def __init__(self):
-        # Store standardisation parameters (mean, std) for each column
+        # Store standardisation parameters for each column
         self.scaling_params = {}
+
+        # Lithology display properties — shared across all plotting methods
+        self.lithology_labels = {
+            'sandstone': {'color': '#ffff00', 'hatch': '..'},
+            'marl':      {'color': '#80ffff', 'hatch': ''},
+            'limestone': {'color': '#4682B4', 'hatch': '++'},
+            'coal':      {'color': 'black',   'hatch': ''},
+            'silt':      {'color': '#7cfc00', 'hatch': '||'},
+            'claystone': {'color': '#228B22', 'hatch': '--'},
+        }
 
     def visualise_lithology_distribution(self, csv_file_paths, display='count'):
         """
@@ -81,7 +90,7 @@ class DataProcessing():
         plt.tight_layout()
         plt.show()
 
-    def process_well_data(self, file_paths, selected_columns, method='standard', train_data=False, val_data=False, show_stats=False, show_rows=False):
+    def process_well_data(self, file_paths, selected_columns, method='standard', train_data=False, val_data=False, show_stats=False, show_rows=False, gr_cap=150, log_transform=None):
         
         """
         Combines and processes data from multiple CSV files.
@@ -90,10 +99,12 @@ class DataProcessing():
             file_paths (list): List of file paths for the CSV files.
             selected_columns (list): List of columns to extract and process.
             train_data (bool): If True, combines all data into a single DataFrame + computes and stores scaling parameters.
-            val_data (bool): If True, combines all data into a single DataFrame.
-                             If neither train_data nor val_data are True >> False >> keeps the data for each file separate.
+            val_data (bool): If True, combines all data into a single DataFrame without computing scaling parameters.
+                             If both train_data and val_data are False, keeps data for each file in a separate DataFrame.
             show_stats (bool): Whether to display descriptive statistics of the processed data.
             show_rows (bool): Whether to display the first few rows of the processed data.
+            gr_cap (int or float): Upper limit for GR values. Rows above this are removed. Default is 150.
+            log_transform (list): Logs to apply log1p transformation to. Defaults to ['KLOGH', 'RT'].
     
         Returns:
             pd.DataFrame or list of pd.DataFrame: Processed DataFrame(s), either combined or separate for each file.
@@ -102,24 +113,27 @@ class DataProcessing():
         combined_data = []
         individual_dataframes = []
     
+        if log_transform is None:
+            log_transform = ['KLOGH', 'RT']
+
         for file in file_paths:
             df = pd.read_csv(file) # Load the data
             df = df[selected_columns] # Select relevant columns
             df.dropna(inplace=True) # Handle missing data: drop rows with missing values 
             
-            numeric_columns = [col for col in selected_columns if col != 'DEPTH'] # exclude 'LITHOLOGY' from selected columns
-            numeric_columns = [col for col in numeric_columns if col != 'LITHOLOGY'] # exclude 'LITHOLOGY' from numerical columns
+            numeric_columns = [col for col in selected_columns if col != 'DEPTH']     # exclude DEPTH from numeric columns
+            numeric_columns = [col for col in numeric_columns if col != 'LITHOLOGY'] # exclude LITHOLOGY from numeric columns
             df = df[(df[numeric_columns] >= 0).all(axis=1)] # Remove negative values
             
-            # Compute logarithms for 'KLOGH' and 'RT' if necessary
-            if 'KLOGH' in df.columns:
-                df['log_KLOGH'] = np.log1p(df['KLOGH'])  # log(1 + x) for stability
-                df.drop(columns=['KLOGH'], inplace=True)  # Remove the original 'KLOGH' column
-            if 'RT' in df.columns:
-                df['log_RT'] = np.log1p(df['RT'])
-                df.drop(columns=['RT'], inplace=True)  # Remove the original 'RT' column
+            # Apply log1p transformation to selected logs
+            for log in log_transform:
+                if log in df.columns:
+                    df[f'log_{log}'] = np.log1p(df[log])  # log(1 + x) for stability
+                    df.drop(columns=[log], inplace=True)
+
+            # Cap GR values
             if 'GR' in df.columns:
-                df = df[df['GR'] <= 150]
+                df = df[df['GR'] <= gr_cap]
         
             individual_dataframes.append(df) # Append the processed DataFrame to the list of individual DataFrames
             combined_data.append(df)  # Add to the combined data list for further merging
@@ -407,14 +421,7 @@ class KMeansClustering():
         lithology = clustered_data['LITHOLOGY'].str.lower().values
         cluster_column = clustered_data['Cluster'].values
     
-        lithology_labels = {
-            'sandstone': {'color': '#ffff00', 'hatch': '..'},
-            'marl': {'color': '#80ffff', 'hatch': ''},   # You can keep this empty if you want no hatch here
-            'limestone': {'color': '#4682B4', 'hatch': '++'},
-            'coal': {'color': 'black', 'hatch': ''},
-            'silt': {'color': '#7cfc00', 'hatch': '||'},
-            'claystone': {'color': '#228B22', 'hatch': '--'}  
-        }
+        lithology_labels = self.lithology_labels
     
         cluster_labels = {
             0: {'color': '#FF6347'}, 1: {'color': '#32CD32'}, 2: {'color': '#1E90FF'},
@@ -500,10 +507,3 @@ class KMeansClustering():
         fig.subplots_adjust(wspace=0.1, top=0.9)
         plt.tight_layout()
         plt.show()
-
-
-
-
-    
-    
-            
